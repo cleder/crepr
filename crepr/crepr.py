@@ -32,7 +32,6 @@ def get_init_args(
         A tuple containing the class name and the dictionary of __init__ arguments,
         or None if the class does not have an __init__ method.
     """
-    # Check if the class has an __init__ method
     if "__init__" in cls.__dict__:
         init_method = cls.__init__  # type: ignore[misc]
         init_signature = inspect.signature(init_method)
@@ -73,6 +72,25 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
     return inspect.getmodule(cls) == module
 
 
+def print_repr(
+    class_name: str,
+    init_args: MappingProxyType[str, inspect.Parameter],
+) -> None:
+    """Print the __repr__ method for a class."""
+    if not has_only_kwargs(init_args):
+        typer.echo(f"Skipping {class_name} due to positional arguments.")
+        return
+    typer.echo(f"Class: {class_name}")
+    typer.echo("    def __repr__(self) -> str:")
+    typer.echo("        return (f'{self.__class__.__name__}('")
+    for arg_name in init_args:
+        if arg_name == "self":
+            continue
+        typer.echo(f"            f'{arg_name}={{self.{arg_name}!r}}, '")
+    typer.echo("        ')')")
+    typer.echo()
+
+
 @app.command()  # type: ignore[misc]
 def create(module_name: str) -> None:
     """
@@ -95,19 +113,11 @@ def create(module_name: str) -> None:
         if not is_class_in_module(obj, module):
             continue
         class_name, init_args = get_init_args(obj)
-        if class_name:
-            assert init_args is not None  # noqa: S101
-            if not has_only_kwargs(init_args):
-                typer.echo(f"Skipping {class_name} due to positional arguments.")
-                continue
-            typer.echo(f"Class: {class_name}")
-            typer.echo("    def __repr__(self) -> str:")
-            typer.echo("        return (f'{self.__class__.__name__}('")
-            for arg_name in init_args:
-                if arg_name != "self":  # Skip 'self' parameter
-                    typer.echo(f"            f'{arg_name}={{self.{arg_name}!r}}, '")
-            typer.echo("        ')')")
-            typer.echo()
+        if not class_name:
+            continue
+
+        assert init_args is not None  # noqa: S101
+        print_repr(class_name, init_args)
 
 
 if __name__ == "__main__":
