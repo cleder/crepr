@@ -7,6 +7,32 @@ imports the specified module, and then prints a `__repr__` method
 for each class defined in the module.
 It uses the definition found in the  `__init__` method of the class.
 
+## Install
+
+```
+pip install crepr
+```
+
+## Usage
+
+```
+❯ crepr --help
+Usage: crepr [OPTIONS] MODULE_NAME
+
+  Create a __repr__ method for each class in a specified module.
+
+Arguments:
+  MODULE_NAME  [required]
+
+Options:
+  --install-completion [bash|zsh|fish|powershell|pwsh]
+                                  Install completion for the specified shell.
+  --show-completion [bash|zsh|fish|powershell|pwsh]
+                                  Show completion for the specified shell, to
+                                  copy it or customize the installation.
+  --help                          Show this message and exit.
+```
+
 For a class with
 
 ```python

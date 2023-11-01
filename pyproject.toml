@@ -10,6 +10,7 @@ authors = [
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
+    "Environment :: Console",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -24,9 +25,10 @@ dependencies = [
 ]
 description = "Create a __repr__ for your python classes from the definition found in __init__"
 keywords = [
-    "GIS",
-    "Spatial",
-    "WKT",
+    "__repr__",
+    "cli",
+    "code generator",
+    "introspection",
 ]
 name = "crepr"
 requires-python = ">=3.12"

@@ -93,17 +93,7 @@ def print_repr(
 
 @app.command()  # type: ignore[misc]
 def create(module_name: str) -> None:
-    """
-    Create a __repr__ method for each class in a specified module.
-
-    Args:
-    ----
-        module_name (str): The name of the module to process.
-
-    Returns:
-    -------
-        None
-    """
+    """Create a __repr__ method for each class in a specified module."""
     try:
         module = importlib.import_module(module_name)
     except ModuleNotFoundError:
