@@ -25,7 +25,7 @@ jobs:
         run: |
           pytest tests --cov=tests --cov=crepr --cov-report=xml
       - name: "Upload coverage to Codecov"
-        if: ${{ matrix.python-version==3.11 }}
+        if: ${{ matrix.python-version==3.12 }}
         uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.11']
+        python-version: ['3.12']
 
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
           python -m pip install -e ".[typing, complexity, linting]"
       - name: Typecheck
         run: |
-          mypy crepr
+          mypy crepr tests
       - name: Linting
         run: |
           flake8 crepr
