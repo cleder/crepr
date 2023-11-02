@@ -53,7 +53,7 @@ jobs:
           mypy crepr tests
       - name: Linting
         run: |
-          flake8 crepr
+          flake8 crepr tests --max-line-length=88
           black --check crepr tests
           ruff --no-fix crepr tests
           yamllint .github/workflows/
