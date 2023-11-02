@@ -64,7 +64,6 @@ repos:
           - flake8-implicit-str-concat
           - flake8-pep3101
           - flake8-print
-          - flake8-rst-docstrings
           - flake8-simplify
           - flake8-string-format
           - flake8-super
