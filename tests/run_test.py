@@ -8,6 +8,13 @@ from crepr import crepr
 runner = CliRunner()
 
 
+def test_get_init_source_no_init() -> None:
+    """Test the edge-case when there is no __init__."""
+    src, lineno = crepr.get_init_source(int)
+    assert lineno == -1
+    assert src == ""
+
+
 def test_get_class_objects() -> None:
     """Test get_class_objects."""
     class_objects = list(crepr.get_class_objects("tests.kw_only_test"))

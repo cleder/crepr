@@ -141,7 +141,7 @@ def print_changed(module: ModuleType, changes: dict[int, list[str]]) -> None:
     typer.echo("\n".join(src))
 
 
-@app.command()  # type: ignore[misc]
+@app.command()
 def create(module_name: str) -> None:
     """Create a __repr__ method for each class in a specified module."""
     classes_processed = 0
