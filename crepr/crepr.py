@@ -110,7 +110,7 @@ def create_repr_lines(
         return []
     lines = [
         "",
-        f"    # crepr generated __repr__ for Class: {class_name}",
+        f"    # crepr generated __repr__ for class: {class_name}",
         "    def __repr__(self) -> str:",
         "        return (f'{self.__class__.__name__}('",
     ]
