@@ -8,6 +8,13 @@ from crepr import crepr
 runner = CliRunner()
 
 
+def test_get_init_source_no_init() -> None:
+    """Test the edge-case when there is no __init__."""
+    src, lineno = crepr.get_init_source(int)
+    assert lineno == -1
+    assert src == ""
+
+
 def test_get_class_objects() -> None:
     """Test get_class_objects."""
     class_objects = list(crepr.get_class_objects("tests.kw_only_test"))
@@ -33,7 +40,7 @@ def test_is_class_in_module() -> None:
 def test_get_init_args() -> None:
     """Test get_init_args."""
     class_objects = list(crepr.get_class_objects("tests.kw_only_test"))
-    class_name, init_args = crepr.get_init_args(class_objects[0][0])
+    class_name, init_args, lineno, src = crepr.get_init_args(class_objects[0][0])
     assert class_name == "KwOnly"
     assert init_args is not None
     assert len(init_args) == 3
@@ -44,14 +51,18 @@ def test_get_init_args() -> None:
     assert init_args["age"].name == "age"
     assert init_args["age"].default is inspect._empty
     assert init_args["age"].annotation == int
+    assert lineno == 6
+    assert src.startswith("    def __init__(self, name: str, *, age: int) -> None:")
 
 
 def test_get_init_args_no_init() -> None:
     """Test get_init_args."""
     class_objects = list(crepr.get_class_objects("tests.class_no_init_test"))
-    class_name, init_args = crepr.get_init_args(class_objects[0][0])
+    class_name, init_args, lineno, src = crepr.get_init_args(class_objects[0][0])
     assert class_name == "NoInit"
     assert init_args is None
+    assert lineno == -1
+    assert src is None
 
 
 def test_has_only_kwargs() -> None:
@@ -98,12 +109,14 @@ def test_create_repr_lines() -> None:
     lines = crepr.create_repr_lines(class_name, init_args)
 
     assert lines == [
-        "#  Class: KwOnly",
+        "",
+        "    # crepr generated __repr__ for class: KwOnly",
         "    def __repr__(self) -> str:",
         "        return (f'{self.__class__.__name__}('",
         "            f'name={self.name!r}, '",
         "            f'age={self.age!r}, '",
         "        ')')",
+        "",
     ]
 
 
@@ -122,8 +135,8 @@ def test_app() -> None:
     result = runner.invoke(crepr.app, ["tests.kw_only_test"])
 
     assert result.exit_code == 0
-    assert "#  Class: KwOnly" in result.stdout
-    assert len(result.stdout.splitlines()) == 6
+    assert "# crepr generated __repr__ for class: KwOnly" in result.stdout
+    assert len(result.stdout.splitlines()) == 18
 
 
 def test_app_no_init() -> None:
