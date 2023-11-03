@@ -7,6 +7,7 @@ imports the specified module, and then prints a `__repr__` method
 for each class defined in the module.
 It uses the definition found in the  `__init__` method of the class.
 
+[![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
 
 ## Install
