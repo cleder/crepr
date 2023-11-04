@@ -2,10 +2,14 @@
 
 Create a ``__repr__`` for your python classes.
 
-A Python script that takes a module name as a command-line argument,
-imports the specified module, and then prints a `__repr__` method
+A Python script that takes a file path as a command-line argument,
+imports the specified file, and then prints a `__repr__` method
 for each class defined in the module.
 It uses the definition found in the  `__init__` method of the class.
+It is pronounced like crêpe, the French pancake.
+
+[![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
+[![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
 
 ## Install
 
@@ -17,20 +21,19 @@ pip install crepr
 
 ```
 ❯ crepr --help
-Usage: crepr [OPTIONS] MODULE_NAME
+Usage: crepr [OPTIONS] FILE_PATH
 
-  Create a __repr__ method for each class in a specified module.
+  Create a __repr__ method for each class of a python file.
 
 Arguments:
-  MODULE_NAME  [required]
+  FILE_PATH  [required]
 
 Options:
   --install-completion [bash|zsh|fish|powershell|pwsh]
                                   Install completion for the specified shell.
   --show-completion [bash|zsh|fish|powershell|pwsh]
                                   Show completion for the specified shell, to
-                                  copy it or customize the installation.
-  --help                          Show this message and exit.
+                                  copy it or customize
 ```
 
 For a class with
@@ -63,4 +66,39 @@ it will create
             f"length={self.length!r}, "
             ")"
         )
+```
+
+## Example
+
+Given the file `tests/kw_only_test.py` with the contents:
+
+```
+class KwOnly:
+    """The happy path class."""
+
+    def __init__(self, name: str, *, age: int) -> None:
+        """Initialize the class."""
+        self.name = name  # pragma: no cover
+        self.age = age  # pragma: no cover
+```
+
+It will produce:
+
+```
+❯ crepr tests/kw_only_test.py
+class KwOnly:
+    """The happy path class."""
+
+    def __init__(self, name: str, *, age: int) -> None:
+        """Initialize the class."""
+        self.name = name  # pragma: no cover
+        self.age = age  # pragma: no cover
+
+    def __repr__(self) -> str:
+        """Create a string (c)representation of the class."""
+        return (f'{self.__class__.__name__}('
+            f'name={self.name!r}, '
+            f'age={self.age!r}, '
+        ')')
+
 ```
