@@ -7,7 +7,9 @@ for each class defined in the module.
 It uses the definition found in the  ``__init__`` method of the class.
 """
 import importlib
+import importlib.machinery
 import inspect
+import uuid
 from collections.abc import Iterable
 from types import MappingProxyType
 from types import ModuleType
@@ -110,8 +112,8 @@ def create_repr_lines(
         return []
     lines = [
         "",
-        f"    # crepr generated __repr__ for class: {class_name}",
         "    def __repr__(self) -> str:",
+        '        """Create a string (c)representation of the class."""',
         "        return (f'{self.__class__.__name__}('",
     ]
     lines.extend(
@@ -123,17 +125,45 @@ def create_repr_lines(
     return lines
 
 
-def get_class_objects(module_name: str) -> Iterable[tuple[type, ModuleType]]:
+def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
+    """
+    Get all classes of a source file.
+
+    Given a file path, loads the module and yields all classes defined in it
+    along with the module object.
+
+    Args:
+    ----
+        file_path (str): The path to the file containing the module.
+
+    Yields:
+    ------
+        tuple[type, ModuleType]: A tuple containing the class and the module objects.
+    """
     try:
-        module = importlib.import_module(module_name)
-    except ModuleNotFoundError:
-        typer.echo(f"Error: Module '{module_name}' not found.")
-        return
+        loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, file_path)
+        module = loader.load_module()
+    except FileNotFoundError as e:
+        typer.secho(f"Error: File '{file_path}' not found.", fg="red")
+        raise typer.Exit(code=1) from e
+    except ImportError as e:
+        typer.secho(f"Error: Could not import '{file_path}'.", fg="red")
+        raise typer.Exit(code=1) from e
+    except SyntaxError as e:
+        typer.secho(f"Error: Could not parse '{file_path}'.", fg="red")
+        raise typer.Exit(code=1) from e
     for _, obj in inspect.getmembers(module, inspect.isclass):
         yield (obj, module)
 
 
 def print_changed(module: ModuleType, changes: dict[int, list[str]]) -> None:
+    """
+    Print out the changes made to the source code.
+
+    Inserts the given changes into the source code of the given module
+    and prints the modified source code.
+
+    """
     src = inspect.getsource(module).splitlines()
     for lineno in sorted(changes.keys(), reverse=True):
         for i, change in enumerate(changes[lineno]):
@@ -142,12 +172,12 @@ def print_changed(module: ModuleType, changes: dict[int, list[str]]) -> None:
 
 
 @app.command()
-def create(module_name: str) -> None:
-    """Create a __repr__ method for each class in a specified module."""
+def create(file_path: str) -> None:
+    """Create a __repr__ method for each class of a python file."""
     classes_processed = 0
     changes: dict[int, list[str]] = {}
     module = None
-    for obj, module in get_class_objects(module_name):
+    for obj, module in get_class_objects(file_path):
         if not is_class_in_module(obj, module):
             continue
         class_name, init_args, lineno, source = get_init_args(obj)
@@ -160,7 +190,10 @@ def create(module_name: str) -> None:
         changes[end_line] = new_lines
         classes_processed += 1
     if not classes_processed:
-        typer.secho(f"Error: No classes found in module '{module_name}'.", fg="red")
+        typer.secho(
+            f"Error: No __repr__ could be generated for '{file_path}'.",
+            fg="red",
+        )
         raise typer.Exit(code=1)
     assert module is not None  # noqa: S101
     print_changed(module, changes)
