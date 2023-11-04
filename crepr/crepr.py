@@ -97,7 +97,8 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
 
     Returns:
     -------
-        bool: True if the class is defined in the specified module, False otherwise.
+        bool: True if the class is defined in the specified module,
+              False if it is imported.
     """
     return inspect.getmodule(cls) == module
 

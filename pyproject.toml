@@ -24,6 +24,9 @@ dependencies = [
     "typer",
 ]
 description = "Create a __repr__ for your python classes from the definition found in __init__"
+dynamic = [
+    "version",
+]
 keywords = [
     "__repr__",
     "cli",
@@ -32,7 +35,6 @@ keywords = [
 ]
 name = "crepr"
 requires-python = ">=3.12"
-version = "0.1.0"
 
 [project.license]
 text = "MIT"
@@ -199,3 +201,6 @@ force-single-line = true
     "S101",
     "SLF001",
 ]
+
+[tool.setuptools.dynamic.version]
+attr = "crepr.about.__version__"

@@ -6,7 +6,7 @@ A Python script that takes a file path as a command-line argument,
 imports the specified file, and then prints a `__repr__` method
 for each class defined in the module.
 It uses the definition found in the  `__init__` method of the class.
-It is pronounced /kɹeɪp/ like crêpe, the French pancake.
+It is pronounced like crêpe /kɹeɪp/, the French pancake.
 
 [![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
