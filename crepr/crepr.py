@@ -1,7 +1,7 @@
 """
 Create a ``__repr__`` for your python classes.
 
-A Python script that takes a module name as a command-line argument,
+A Python script that takes a file name as a command-line argument,
 imports the specified module, and then prints a ``__repr__`` method
 for each class defined in the module.
 It uses the definition found in the  ``__init__`` method of the class.
@@ -108,12 +108,11 @@ def create_repr_lines(
 ) -> list[str]:
     """Create the source loc for the __repr__ method for a class."""
     if not has_only_kwargs(init_args):
-        typer.echo(f"Skipping {class_name} due to positional arguments.")
         return []
     lines = [
         "",
         "    def __repr__(self) -> str:",
-        '        """Create a string (c)representation of the class."""',
+        f'        """Create a string (c)representation for {class_name}."""',
         "        return (f'{self.__class__.__name__}('",
     ]
     lines.extend(

@@ -6,7 +6,7 @@ A Python script that takes a file path as a command-line argument,
 imports the specified file, and then prints a `__repr__` method
 for each class defined in the module.
 It uses the definition found in the  `__init__` method of the class.
-It is pronounced like crêpe, the French pancake.
+It is pronounced /kɹeɪp/ like crêpe, the French pancake.
 
 [![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
@@ -78,8 +78,8 @@ class KwOnly:
 
     def __init__(self, name: str, *, age: int) -> None:
         """Initialize the class."""
-        self.name = name  # pragma: no cover
-        self.age = age  # pragma: no cover
+        self.name = name
+        self.age = age
 ```
 
 It will produce:
@@ -91,8 +91,8 @@ class KwOnly:
 
     def __init__(self, name: str, *, age: int) -> None:
         """Initialize the class."""
-        self.name = name  # pragma: no cover
-        self.age = age  # pragma: no cover
+        self.name = name
+        self.age = age
 
     def __repr__(self) -> str:
         """Create a string (c)representation of the class."""
