@@ -20,8 +20,8 @@ Have a look at the blog-post [Love Your Representation
 [![Black](https://img.shields.io/badge/code_style-black-000000)
 ](https://github.com/psf/black)
 ![MIT License](https://img.shields.io/pypi/l/crepr)
-![PyPI - Version](https://img.shields.io/pypi/v/crepr)
 ![Python Version](https://img.shields.io/pypi/pyversions/crepr)
+![PyPI - Version](https://img.shields.io/pypi/v/crepr)
 ![Status](https://img.shields.io/pypi/status/crepr)
 
 ## Install
