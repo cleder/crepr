@@ -123,7 +123,7 @@ def test_create_repr_lines() -> None:
     assert lines == [
         "",
         "    def __repr__(self) -> str:",
-        '        """Create a string (c)representation of the class."""',
+        '        """Create a string (c)representation for KwOnly."""',
         "        return (f'{self.__class__.__name__}('",
         "            f'name={self.name!r}, '",
         "            f'age={self.age!r}, '",
@@ -147,7 +147,7 @@ def test_app() -> None:
     result = runner.invoke(crepr.app, ["tests/kw_only_test.py"])
 
     assert result.exit_code == 0
-    assert "Create a string (c)representation of the class" in result.stdout
+    assert "Create a string (c)representation for KwOnly" in result.stdout
     assert len(result.stdout.splitlines()) == 18
 
 
