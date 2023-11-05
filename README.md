@@ -13,7 +13,7 @@ Have a look at the blog-post [Love Your Representation
 
 [![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)
 ](https://github.com/pre-commit/pre-commit)
 [![MyPy](https://img.shields.io/badge/type_checker-mypy-blue)
 ](http://mypy-lang.org/)
