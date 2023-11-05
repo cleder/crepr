@@ -19,7 +19,7 @@ def test_get_init_source_no_init() -> None:
 
 def test_get_class_objects() -> None:
     """Test get_class_objects."""
-    class_objects = list(crepr.get_class_objects("tests/kw_only_test.py"))
+    class_objects = list(crepr.get_class_objects("tests/classes/kw_only_test.py"))
 
     assert len(class_objects) == 1
     assert class_objects[0][0].__name__ == "KwOnly"
@@ -28,30 +28,30 @@ def test_get_class_objects() -> None:
 def test_get_class_objects_module_not_found() -> None:
     """Exit gracefully if module not found."""
     with pytest.raises(click.exceptions.Exit):
-        list(crepr.get_class_objects("tests/file/not/found"))
+        list(crepr.get_class_objects("tests/classes/file/not/found"))
 
 
 def test_get_class_objects_import_error() -> None:
     """Exit gracefully if module not found."""
     with pytest.raises(click.exceptions.Exit):
-        list(crepr.get_class_objects("tests/import_error.py"))
+        list(crepr.get_class_objects("tests/classes/import_error.py"))
 
 
 def test_get_class_objects_syntax_error() -> None:
     """Exit gracefully if module not found."""
     with pytest.raises(click.exceptions.Exit):
-        list(crepr.get_class_objects("tests/c_test.c"))
+        list(crepr.get_class_objects("tests/classes/c_test.c"))
 
 
 def test_is_class_in_module() -> None:
     """Test is_class_in_module."""
-    class_objects = list(crepr.get_class_objects("tests/kw_only_test.py"))
+    class_objects = list(crepr.get_class_objects("tests/classes/kw_only_test.py"))
     assert crepr.is_class_in_module(class_objects[0][0], class_objects[0][1])
 
 
 def test_get_init_args() -> None:
     """Test get_init_args."""
-    class_objects = list(crepr.get_class_objects("tests/kw_only_test.py"))
+    class_objects = list(crepr.get_class_objects("tests/classes/kw_only_test.py"))
     class_name, init_args, lineno, src = crepr.get_init_args(class_objects[0][0])
     assert class_name == "KwOnly"
     assert init_args is not None
@@ -69,7 +69,7 @@ def test_get_init_args() -> None:
 
 def test_get_init_args_no_init() -> None:
     """Test get_init_args."""
-    class_objects = list(crepr.get_class_objects("tests/class_no_init_test.py"))
+    class_objects = list(crepr.get_class_objects("tests/classes/class_no_init_test.py"))
     class_name, init_args, lineno, src = crepr.get_init_args(class_objects[0][0])
     assert class_name == "NoInit"
     assert init_args is None
@@ -124,7 +124,7 @@ def test_create_repr_lines() -> None:
         "",
         "    def __repr__(self) -> str:",
         '        """Create a string (c)representation for KwOnly."""',
-        "        return (f'{self.__class__.__name__}('",
+        "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
         "            f'name={self.name!r}, '",
         "            f'age={self.age!r}, '",
         "        ')')",
@@ -144,7 +144,7 @@ def test_create_repr_lines_no_init() -> None:
 
 def test_app() -> None:
     """Test the app happy path."""
-    result = runner.invoke(crepr.app, ["tests/kw_only_test.py"])
+    result = runner.invoke(crepr.app, ["tests/classes/kw_only_test.py"])
 
     assert result.exit_code == 0
     assert "Create a string (c)representation for KwOnly" in result.stdout
@@ -153,7 +153,7 @@ def test_app() -> None:
 
 def test_app_no_init() -> None:
     """Test the app no reprs produced."""
-    result = runner.invoke(crepr.app, ["tests/class_no_init_test.py"])
+    result = runner.invoke(crepr.app, ["tests/classes/class_no_init_test.py"])
 
     assert result.exit_code == 1
     assert "#  Class: NoInit" not in result.stdout
@@ -162,7 +162,7 @@ def test_app_no_init() -> None:
 
 def test_app_no_classes() -> None:
     """Test the app no classes found."""
-    file_name = "tests/only_imported_test.py"
+    file_name = "tests/classes/only_imported_test.py"
     result = runner.invoke(crepr.app, [file_name])
 
     assert result.exit_code == 1

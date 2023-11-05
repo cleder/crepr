@@ -114,7 +114,7 @@ def create_repr_lines(
         "",
         "    def __repr__(self) -> str:",
         f'        """Create a string (c)representation for {class_name}."""',
-        "        return (f'{self.__class__.__name__}('",
+        "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
     ]
     lines.extend(
         f"            f'{arg_name}={{self.{arg_name}!r}}, '"
