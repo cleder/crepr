@@ -19,9 +19,9 @@ Have a look at the blog-post [Love Your Representation
 ](http://mypy-lang.org/)
 [![Black](https://img.shields.io/badge/code_style-black-000000)
 ](https://github.com/psf/black)
-![MIT License](https://img.shields.io/pypi/l/crepr)
-![Python Version](https://img.shields.io/pypi/pyversions/crepr)
-![PyPI - Version](https://img.shields.io/pypi/v/crepr)
+[![MIT License](https://img.shields.io/pypi/l/crepr)](https://opensource.org/license/mit/)
+[![Python Version](https://img.shields.io/pypi/pyversions/crepr)](https://www.python.org/)
+[![PyPI - Version](https://img.shields.io/pypi/v/crepr)](https://github.com/cleder/crepr)
 ![Status](https://img.shields.io/pypi/status/crepr)
 
 ## Install
@@ -47,38 +47,6 @@ Options:
   --show-completion [bash|zsh|fish|powershell|pwsh]
                                   Show completion for the specified shell, to
                                   copy it or customize
-```
-
-For a class with
-
-```python
-    def __init__(
-        self,
-        ns: Optional[str] = None,
-        href: Optional[str] = None,
-        rel: Optional[str] = None,
-        type: Optional[str] = None,
-        hreflang: Optional[str] = None,
-        title: Optional[str] = None,
-        length: Optional[int] = None,
-    ) -> None:
-```
-
-it will create
-
-```python
-    def __repr__(self) -> str:
-        return (
-            f"{self.__class__.__name__}("
-            f"ns={self.ns!r}, "
-            f"href={self.href!r}, "
-            f"rel={self.rel!r}, "
-            f"type={self.type!r}, "
-            f"hreflang={self.hreflang!r}, "
-            f"title={self.title!r}, "
-            f"length={self.length!r}, "
-            ")"
-        )
 ```
 
 ## Example
