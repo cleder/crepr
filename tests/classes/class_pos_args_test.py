@@ -1,12 +1,12 @@
 """Test class with positional args."""
+from typing import Self
 
 
 class PosArgs:
     """Positional args cannot be processed."""
 
-    def __init__(self, x: int, **args: int) -> None:
-        """
-        Initialize the class.
+    def __init__(self: Self, x: int, **args: int) -> None:
+        """Initialize the class.
 
         Args:
         ----

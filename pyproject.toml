@@ -124,11 +124,8 @@ warn_unused_ignores = true
 [tool.ruff]
 fix = true
 ignore = [
-    "ANN101",
-    "ANN102",
     "D203",
-    "D212",
-    "FA100",
+    "D213",
 ]
 select = [
     "A",
