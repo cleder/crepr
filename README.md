@@ -11,7 +11,7 @@ It is pronounced /kɹeɪpr/, like 🇳🇿 crêpe.
 Have a look at the blog-post [Love Your Representation
 ](https://dev.to/ldrscke/love-your-representation-27mm) for the rationale of this package.
 
-[![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
+[![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg?branch=main)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)
 ](https://github.com/pre-commit/pre-commit)
