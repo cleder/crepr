@@ -65,7 +65,6 @@ linting = [
     "flake8-pep3101",
     "flake8-string-format",
     "flake8-super",
-    "flake8-typing-imports",
     "flake8-use-fstring",
     "ruff",
     "yamllint",
