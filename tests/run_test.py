@@ -63,8 +63,10 @@ def test_get_init_args() -> None:
     assert init_args["age"].name == "age"
     assert init_args["age"].default is inspect._empty
     assert init_args["age"].annotation == int
-    assert lineno == 6
-    assert src.startswith("    def __init__(self, name: str, *, age: int) -> None:")
+    assert lineno == 7
+    assert src.startswith(
+        "    def __init__(self: Self, name: str, *, age: int) -> None:",
+    )
 
 
 def test_get_init_args_no_init() -> None:
@@ -148,7 +150,7 @@ def test_app() -> None:
 
     assert result.exit_code == 0
     assert "Create a string (c)representation for KwOnly" in result.stdout
-    assert len(result.stdout.splitlines()) == 18
+    assert len(result.stdout.splitlines()) == 19
 
 
 def test_app_no_init() -> None:
