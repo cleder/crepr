@@ -21,8 +21,8 @@ Have a look at the blog-post [Love Your Representation
 ](https://github.com/psf/black)
 [![MIT License](https://img.shields.io/pypi/l/crepr)](https://opensource.org/license/mit/)
 [![Python Version](https://img.shields.io/pypi/pyversions/crepr)](https://www.python.org/)
-[![PyPI - Version](https://img.shields.io/pypi/v/crepr)](https://github.com/cleder/crepr)
-![Status](https://img.shields.io/pypi/status/crepr)
+[![PyPI - Version](https://img.shields.io/pypi/v/crepr)](https://pypi.org/project/crepr/)
+[![Status](https://img.shields.io/pypi/status/crepr)](https://pypi.org/project/crepr/)
 
 ## Install
 
