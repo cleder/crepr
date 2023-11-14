@@ -193,6 +193,6 @@ def create(file_path: str) -> None:
 
 
 if __name__ == "__main__":
-    app()  # pragma: no cover
+    app()
 
 __all__ = ["create"]
