@@ -74,6 +74,8 @@ repos:
     rev: v1.7.0
     hooks:
       - id: mypy
+        args: [--strict]
+        additional_dependencies: ["typer"]
   - repo: https://github.com/abravalheri/validate-pyproject
     rev: v0.15
     hooks:
