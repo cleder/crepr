@@ -87,6 +87,20 @@ crepr = "crepr.crepr:app"
 [project.urls]
 Homepage = "https://github.com/cleder/crepr/"
 
+[tool.coverage.paths]
+source = [
+    "crepr",
+    "tests",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
+]
+
+[tool.coverage.run]
+branch = true
+
 [tool.flake8]
 max_line_length = 88
 
