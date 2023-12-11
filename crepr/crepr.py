@@ -1,7 +1,6 @@
-"""
-Create a ``__repr__`` for your python classes.
+"""Create a ``__repr__`` for your python classes.
 
-A Python script that takes a module name as a command-line argument,
+A Python script that takes a file name as a command-line argument,
 imports the specified module, and then prints a ``__repr__`` method
 for each class defined in the module.
 It uses the definition found in the  ``__init__`` method of the class.
@@ -20,8 +19,7 @@ app = typer.Typer()
 
 
 def get_init_source(cls: type) -> tuple[str, int]:
-    """
-    Get the source code and line number of the __init__ method of a class.
+    """Get the source code and line number of the __init__ method of a class.
 
     Args:
     ----
@@ -44,8 +42,7 @@ def get_init_source(cls: type) -> tuple[str, int]:
 def get_init_args(
     cls: type,
 ) -> tuple[str, MappingProxyType[str, inspect.Parameter] | None, int, str | None]:
-    """
-    Get the __init__ arguments of a class.
+    """Get the __init__ arguments of a class.
 
     Args:
     ----
@@ -67,8 +64,7 @@ def get_init_args(
 
 
 def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool:
-    """
-    Check if the given init_args dictionary contains only keyword arguments.
+    """Check if the given init_args dictionary contains only keyword arguments.
 
     Returns
     -------
@@ -87,8 +83,7 @@ def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool
 
 
 def is_class_in_module(cls: type, module: ModuleType) -> bool:
-    """
-    Check if a class is defined in a specific module.
+    """Check if a class is defined in a specific module.
 
     Args:
     ----
@@ -97,7 +92,8 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
 
     Returns:
     -------
-        bool: True if the class is defined in the specified module, False otherwise.
+        bool: True if the class is defined in the specified module,
+              False if it is imported.
     """
     return inspect.getmodule(cls) == module
 
@@ -108,13 +104,12 @@ def create_repr_lines(
 ) -> list[str]:
     """Create the source loc for the __repr__ method for a class."""
     if not has_only_kwargs(init_args):
-        typer.echo(f"Skipping {class_name} due to positional arguments.")
         return []
     lines = [
         "",
         "    def __repr__(self) -> str:",
-        '        """Create a string (c)representation of the class."""',
-        "        return (f'{self.__class__.__name__}('",
+        f'        """Create a string (c)representation for {class_name}."""',
+        "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
     ]
     lines.extend(
         f"            f'{arg_name}={{self.{arg_name}!r}}, '"
@@ -126,8 +121,7 @@ def create_repr_lines(
 
 
 def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
-    """
-    Get all classes of a source file.
+    """Get all classes of a source file.
 
     Given a file path, loads the module and yields all classes defined in it
     along with the module object.
@@ -157,8 +151,7 @@ def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
 
 
 def print_changed(module: ModuleType, changes: dict[int, list[str]]) -> None:
-    """
-    Print out the changes made to the source code.
+    """Print out the changes made to the source code.
 
     Inserts the given changes into the source code of the given module
     and prints the modified source code.
@@ -200,6 +193,6 @@ def create(file_path: str) -> None:
 
 
 if __name__ == "__main__":
-    app()  # pragma: no cover
+    app()
 
 __all__ = ["create"]

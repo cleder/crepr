@@ -19,11 +19,16 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Topic :: Software Development :: Code Generators",
+    "Typing :: Typed",
 ]
 dependencies = [
     "typer",
 ]
 description = "Create a __repr__ for your python classes from the definition found in __init__"
+dynamic = [
+    "version",
+]
 keywords = [
     "__repr__",
     "cli",
@@ -32,7 +37,6 @@ keywords = [
 ]
 name = "crepr"
 requires-python = ">=3.12"
-version = "0.1.0"
 
 [project.license]
 text = "MIT"
@@ -63,7 +67,6 @@ linting = [
     "flake8-pep3101",
     "flake8-string-format",
     "flake8-super",
-    "flake8-typing-imports",
     "flake8-use-fstring",
     "ruff",
     "yamllint",
@@ -85,6 +88,20 @@ crepr = "crepr.crepr:app"
 
 [project.urls]
 Homepage = "https://github.com/cleder/crepr/"
+
+[tool.coverage.paths]
+source = [
+    "crepr",
+    "tests",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if __name__ == .__main__.:",
+]
+
+[tool.coverage.run]
+branch = true
 
 [tool.flake8]
 max_line_length = 88
@@ -122,11 +139,8 @@ warn_unused_ignores = true
 [tool.ruff]
 fix = true
 ignore = [
-    "ANN101",
-    "ANN102",
     "D203",
-    "D212",
-    "FA100",
+    "D213",
 ]
 select = [
     "A",
@@ -199,3 +213,6 @@ force-single-line = true
     "S101",
     "SLF001",
 ]
+
+[tool.setuptools.dynamic.version]
+attr = "crepr.about.__version__"
