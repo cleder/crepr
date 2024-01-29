@@ -1,4 +1,5 @@
 """Test class for kw only arguments."""
+
 from typing import Self
 
 

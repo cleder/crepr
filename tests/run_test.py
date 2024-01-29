@@ -1,4 +1,5 @@
 """Tests for crepr module."""
+
 import inspect
 
 import click
