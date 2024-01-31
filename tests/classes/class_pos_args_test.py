@@ -1,4 +1,5 @@
 """Test class with positional args."""
+
 from typing import Self
 
 

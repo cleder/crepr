@@ -5,6 +5,7 @@ imports the specified module, and then prints a ``__repr__`` method
 for each class defined in the module.
 It uses the definition found in the  ``__init__`` method of the class.
 """
+
 import importlib
 import importlib.machinery
 import inspect
