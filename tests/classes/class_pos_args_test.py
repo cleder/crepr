@@ -21,6 +21,7 @@ class PosArgs:
         Examples:
         --------
             >>> obj = ClassName(10, arg1=20, arg2=30)
+
         """
         self.x = x  # pragma: no cover
         self.other_args = args  # pragma: no cover

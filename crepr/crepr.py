@@ -31,6 +31,7 @@ def get_init_source(cls: type) -> tuple[str, int]:
         tuple[str, int]: A tuple containing the source code of the __init__ method and
         the line number where it was found, or an empty string and -1 if the class
         does not have an __init__ method.
+
     """
     if "__init__" in cls.__dict__:
         init_method = cls.__init__  # type: ignore[misc]
@@ -54,6 +55,7 @@ def get_init_args(
         tuple[str, MappingProxyType[str, inspect.Parameter] | None]:
         A tuple containing the class name and the dictionary of __init__ arguments,
         or None if the class does not have an __init__ method.
+
     """
     if "__init__" in cls.__dict__:
         init_source, lineno = get_init_source(cls)
@@ -70,6 +72,7 @@ def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool
     Returns
     -------
         bool: True if the init_args only contain keyword arguments, False otherwise.
+
     """
     if not init_args:
         return False
@@ -95,6 +98,7 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
     -------
         bool: True if the class is defined in the specified module,
               False if it is imported.
+
     """
     return inspect.getmodule(cls) == module
 
@@ -134,6 +138,7 @@ def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
     Yields:
     ------
         tuple[type, ModuleType]: A tuple containing the class and the module objects.
+
     """
     try:
         loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, file_path)
