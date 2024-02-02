@@ -138,6 +138,9 @@ warn_unused_ignores = true
 
 [tool.ruff]
 fix = true
+target-version = "py312"
+
+[tool.ruff.lint]
 ignore = [
     "D203",
     "D213",
@@ -202,12 +205,11 @@ select = [
     "W",
     "YTT",
 ]
-target-version = "py312"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 force-single-line = true
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "tests/*.py" = [
     "PLR2004",
     "S101",
