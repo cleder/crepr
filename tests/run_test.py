@@ -73,11 +73,27 @@ def test_get_init_args() -> None:
 def test_get_init_args_no_init() -> None:
     """Test get_init_args."""
     class_objects = list(crepr.get_class_objects("tests/classes/class_no_init_test.py"))
+
     class_name, init_args, lineno, src = crepr.get_init_args(class_objects[0][0])
+
     assert class_name == "NoInit"
     assert init_args is None
     assert lineno == -1
     assert src is None
+
+
+def test_get_init_splat_kwargs() -> None:
+    """Test get_init_args with a **kwargs splat."""
+    class_objects = list(
+        crepr.get_class_objects("tests/classes/class_splat_kwargs_test.py"),
+    )
+
+    class_name, init_args, lineno, src = crepr.get_init_args(class_objects[0][0])
+
+    assert class_name == "SplatKwargs"
+    assert init_args is not None
+    assert len(init_args) == 3
+    assert init_args["kwargs"].kind == inspect.Parameter.VAR_KEYWORD
 
 
 def test_has_only_kwargs() -> None:
@@ -86,6 +102,7 @@ def test_has_only_kwargs() -> None:
         "self": inspect.Parameter("self", inspect.Parameter.POSITIONAL_OR_KEYWORD),
         "name": inspect.Parameter("name", inspect.Parameter.POSITIONAL_OR_KEYWORD),
         "age": inspect.Parameter("age", inspect.Parameter.KEYWORD_ONLY),
+        "kwargs": inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD),
     }
 
     assert crepr.has_only_kwargs(init_args)
@@ -130,6 +147,26 @@ def test_create_repr_lines() -> None:
         "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
         "            f'name={self.name!r}, '",
         "            f'age={self.age!r}, '",
+        "        ')')",
+        "",
+    ]
+
+
+def test_create_repr_lines_splat_kwargs() -> None:
+    """Test create_repr_lines."""
+    class_name = "SplatKwargs"
+    init_args = {
+        "self": inspect.Parameter("self", inspect.Parameter.POSITIONAL_OR_KEYWORD),
+        "kwargs": inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD),
+    }
+
+    lines = crepr.create_repr_lines(class_name, init_args)
+    assert lines == [
+        "",
+        "    def __repr__(self) -> str:",
+        '        """Create a string (c)representation for SplatKwargs."""',
+        "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
+        "            f'**kwargs=...,'",
         "        ')')",
         "",
     ]

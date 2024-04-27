@@ -79,8 +79,9 @@ def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool
     return all(
         param.kind
         in {
-            inspect._ParameterKind.POSITIONAL_OR_KEYWORD,  # noqa: SLF001
-            inspect._ParameterKind.KEYWORD_ONLY,  # noqa: SLF001
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+            inspect.Parameter.KEYWORD_ONLY,
+            inspect.Parameter.VAR_KEYWORD,
         }
         for param in init_args.values()
     )
@@ -117,8 +118,12 @@ def create_repr_lines(
         "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
     ]
     lines.extend(
-        f"            f'{arg_name}={{self.{arg_name}!r}}, '"
-        for arg_name in init_args
+        (
+            f"            f'{arg_name}={{self.{arg_name}!r}}, '"
+            if arg_param.kind != inspect.Parameter.VAR_KEYWORD
+            else f"            f'**{arg_name}=...,'"
+        )
+        for arg_name, arg_param in init_args.items()
         if arg_name != "self"
     )
     lines.extend(("        ')')", ""))

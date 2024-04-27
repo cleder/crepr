@@ -63,7 +63,7 @@ class KwOnly:
 The command:
 
 ```bash
-❯ crepr tests/kw_only_test.py
+❯ crepr tests/classes/kw_only_test.py
 ```
 
 produces
