@@ -140,7 +140,7 @@ def test_create_repr_lines() -> None:
         "age": inspect.Parameter("age", inspect.Parameter.KEYWORD_ONLY),
     }
 
-    lines = crepr.create_repr_lines(class_name, init_args)
+    lines = crepr.create_repr_lines(class_name, init_args, kwarg_splat="...")
 
     assert lines == [
         "",
@@ -162,13 +162,13 @@ def test_create_repr_lines_splat_kwargs() -> None:
         "kwargs": inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD),
     }
 
-    lines = crepr.create_repr_lines(class_name, init_args)
+    lines = crepr.create_repr_lines(class_name, init_args, kwarg_splat=".x.x.")
     assert lines == [
         "",
         "    def __repr__(self) -> str:",
         '        """Create a string (c)representation for SplatKwargs."""',
         "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
-        "            f'**kwargs=...,'",
+        "            f'**kwargs=.x.x.,'",
         "        ')')",
         "",
     ]
@@ -179,7 +179,7 @@ def test_create_repr_lines_no_init() -> None:
     class_name = "NoInit"
     init_args = None
 
-    lines = crepr.create_repr_lines(class_name, init_args)
+    lines = crepr.create_repr_lines(class_name, init_args, kwarg_splat="...")
 
     assert lines == []
 

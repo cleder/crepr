@@ -34,19 +34,20 @@ pip install crepr
 
 ```bash
 ❯ crepr --help
-Usage: crepr [OPTIONS] FILE_PATH
-
-  Create a __repr__ method for each class of a python file.
-
-Arguments:
-  FILE_PATH  [required]
+Usage: crepr [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --install-completion [bash|zsh|fish|powershell|pwsh]
                                   Install completion for the specified shell.
   --show-completion [bash|zsh|fish|powershell|pwsh]
                                   Show completion for the specified shell, to
-                                  copy it or customize
+                                  copy it or customize the installation.
+  --help                          Show this message and exit.
+
+Commands:
+  diff   Show the diff of the changes made to the source code.
+  show   Show what changes would be made to the source code.
+  write  Write the changes to the source code.
 ```
 
 ## Example
@@ -63,7 +64,7 @@ class KwOnly:
 The command:
 
 ```bash
-❯ crepr tests/classes/kw_only_test.py
+❯ crepr show tests/classes/kw_only_test.py
 ```
 
 produces

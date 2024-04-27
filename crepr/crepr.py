@@ -15,6 +15,7 @@ import uuid
 from collections.abc import Iterable
 from types import MappingProxyType
 from types import ModuleType
+from typing import Annotated
 from typing import TypedDict
 
 import typer
@@ -117,6 +118,7 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
 def create_repr_lines(
     class_name: str,
     init_args: MappingProxyType[str, inspect.Parameter],
+    kwarg_splat: str,
 ) -> list[str]:
     """Create the source loc for the __repr__ method for a class."""
     if not has_only_kwargs(init_args):
@@ -131,7 +133,7 @@ def create_repr_lines(
         (
             f"            f'{arg_name}={{self.{arg_name}!r}}, '"
             if arg_param.kind != inspect.Parameter.VAR_KEYWORD
-            else f"            f'**{arg_name}=...,'"
+            else f"            f'**{arg_name}={kwarg_splat},'"
         )
         for arg_name, arg_param in init_args.items()
         if arg_name != "self"
@@ -198,7 +200,7 @@ def print_changed(module: ModuleType, changes: dict[int, Change]) -> None:
     typer.echo("\n".join(src))
 
 
-def create(file_path: str) -> tuple[ModuleType, dict[int, Change]]:
+def create(file_path: str, kwarg_splat: str) -> tuple[ModuleType, dict[int, Change]]:
     """Create a __repr__ method for each class of a python file."""
     classes_processed = 0
     changes: dict[int, Change] = {}
@@ -210,7 +212,7 @@ def create(file_path: str) -> tuple[ModuleType, dict[int, Change]]:
         if not init_args:
             continue
         assert init_args is not None  # noqa: S101
-        new_lines = create_repr_lines(class_name, init_args)
+        new_lines = create_repr_lines(class_name, init_args, kwarg_splat)
         assert source is not None  # noqa: S101
         end_line = len(source.splitlines()) + lineno
         changes[end_line] = {"lines": new_lines, "class_name": class_name}
@@ -225,17 +227,29 @@ def create(file_path: str) -> tuple[ModuleType, dict[int, Change]]:
     return module, changes
 
 
+file_arg = typer.Argument(help="The python source file")
+splat_option = typer.Option(
+    help="The **kwarg splat",
+)
+
+
 @app.command()
-def show(file_path: str) -> None:
+def show(
+    file_path: Annotated[str, file_arg],
+    kwarg_splat: Annotated[str, splat_option] = "...",
+) -> None:
     """Show what changes would be made to the source code."""
-    module, changes = create(file_path)
+    module, changes = create(file_path, kwarg_splat)
     print_changed(module, changes)
 
 
 @app.command()
-def diff(file_path: str) -> None:
+def diff(
+    file_path: Annotated[str, file_arg],
+    kwarg_splat: Annotated[str, splat_option] = "...",
+) -> None:
     """Show the diff of the changes to be made to the source code."""
-    module, changes = create(file_path)
+    module, changes = create(file_path, kwarg_splat)
     after = apply_changes(module, changes)
     before = inspect.getsource(module).splitlines()
     diff = difflib.unified_diff(before, after, lineterm="")
@@ -243,9 +257,12 @@ def diff(file_path: str) -> None:
 
 
 @app.command()
-def write(file_path: str) -> None:
+def write(
+    file_path: Annotated[str, file_arg],
+    kwarg_splat: Annotated[str, splat_option] = "...",
+) -> None:
     """Write the changes to the source code."""
-    module, changes = create(file_path)
+    module, changes = create(file_path, kwarg_splat)
     src = apply_changes(module, changes)
     with pathlib.Path(file_path).open(mode="w", encoding="UTF-8") as f:
         f.write("\n".join(src))
