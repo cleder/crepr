@@ -1,6 +1,8 @@
 """Tests for crepr module."""
 
 import inspect
+import pathlib
+import tempfile
 
 import click
 import pytest
@@ -182,29 +184,58 @@ def test_create_repr_lines_no_init() -> None:
     assert lines == []
 
 
-def test_app() -> None:
+def test_show() -> None:
     """Test the app happy path."""
-    result = runner.invoke(crepr.app, ["tests/classes/kw_only_test.py"])
+    result = runner.invoke(crepr.app, ["show", "tests/classes/kw_only_test.py"])
 
     assert result.exit_code == 0
     assert "Create a string (c)representation for KwOnly" in result.stdout
     assert len(result.stdout.splitlines()) == 20
 
 
-def test_app_no_init() -> None:
+def test_show_no_init() -> None:
     """Test the app no reprs produced."""
-    result = runner.invoke(crepr.app, ["tests/classes/class_no_init_test.py"])
+    result = runner.invoke(crepr.app, ["show", "tests/classes/class_no_init_test.py"])
 
     assert result.exit_code == 1
     assert "#  Class: NoInit" not in result.stdout
     assert len(result.stdout.splitlines()) == 1
 
 
-def test_app_no_classes() -> None:
+def test_show_no_classes() -> None:
     """Test the app no classes found."""
     file_name = "tests/classes/only_imported_test.py"
-    result = runner.invoke(crepr.app, [file_name])
+    result = runner.invoke(crepr.app, ["show", file_name])
 
     assert result.exit_code == 1
     assert f"Error: No __repr__ could be generated for '{file_name}'." in result.stdout
     assert len(result.stdout.splitlines()) == 1
+
+
+def test_diff() -> None:
+    """Print the diff."""
+    result = runner.invoke(crepr.app, ["diff", "tests/classes/kw_only_test.py"])
+
+    assert result.exit_code == 0
+    assert len(result.stdout.splitlines()) == 14
+    assert result.stdout.startswith("---")
+    assert result.stdout.splitlines()[1].startswith("+++")
+    assert result.stdout.splitlines()[-1] == "+"
+
+
+def test_write() -> None:
+    """Write the changes."""
+    file_name = "tests/classes/kw_only_test.py"
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+        with pathlib.Path.open(file_name, mode="rt", encoding="UTF-8") as f:
+            temp_file.write(f.read())
+        temp_file_path = temp_file.name
+
+    result = runner.invoke(crepr.app, ["write", temp_file_path])
+    assert result.exit_code == 0
+    with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
+        content = f.read()
+        assert "    def __repr__(self) -> str:" in content
+        assert '"""Create a string (c)representation for KwOnly."""' in content
+
+    pathlib.Path.unlink(temp_file_path)

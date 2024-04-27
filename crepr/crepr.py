@@ -6,17 +6,27 @@ for each class defined in the module.
 It uses the definition found in the  ``__init__`` method of the class.
 """
 
+import difflib
 import importlib
 import importlib.machinery
 import inspect
+import pathlib
 import uuid
 from collections.abc import Iterable
 from types import MappingProxyType
 from types import ModuleType
+from typing import TypedDict
 
 import typer
 
-app = typer.Typer()
+app = typer.Typer(no_args_is_help=True)
+
+
+class Change(TypedDict):
+    """A dictionary representing a change to be made to the source code."""
+
+    class_name: str
+    lines: list[str]
 
 
 def get_init_source(cls: type) -> tuple[str, int]:
@@ -161,25 +171,37 @@ def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
         yield (obj, module)
 
 
-def print_changed(module: ModuleType, changes: dict[int, list[str]]) -> None:
+def apply_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
+    """Apply the changes to the source code of the given module.
+
+    Args:
+    ----
+        module (ModuleType): The module to modify.
+        changes (dict[int, Change]): The changes to apply.
+
+    """
+    src = inspect.getsource(module).splitlines()
+    for lineno in sorted(changes.keys(), reverse=True):
+        for i, change in enumerate(changes[lineno]["lines"]):
+            src.insert(lineno + i, change)
+    return src
+
+
+def print_changed(module: ModuleType, changes: dict[int, Change]) -> None:
     """Print out the changes made to the source code.
 
     Inserts the given changes into the source code of the given module
     and prints the modified source code.
 
     """
-    src = inspect.getsource(module).splitlines()
-    for lineno in sorted(changes.keys(), reverse=True):
-        for i, change in enumerate(changes[lineno]):
-            src.insert(lineno + i, change)
+    src = apply_changes(module, changes)
     typer.echo("\n".join(src))
 
 
-@app.command()
-def create(file_path: str) -> None:
+def create(file_path: str) -> tuple[ModuleType, dict[int, Change]]:
     """Create a __repr__ method for each class of a python file."""
     classes_processed = 0
-    changes: dict[int, list[str]] = {}
+    changes: dict[int, Change] = {}
     module = None
     for obj, module in get_class_objects(file_path):
         if not is_class_in_module(obj, module):
@@ -191,7 +213,7 @@ def create(file_path: str) -> None:
         new_lines = create_repr_lines(class_name, init_args)
         assert source is not None  # noqa: S101
         end_line = len(source.splitlines()) + lineno
-        changes[end_line] = new_lines
+        changes[end_line] = {"lines": new_lines, "class_name": class_name}
         classes_processed += 1
     if not classes_processed:
         typer.secho(
@@ -200,7 +222,33 @@ def create(file_path: str) -> None:
         )
         raise typer.Exit(code=1)
     assert module is not None  # noqa: S101
+    return module, changes
+
+
+@app.command()
+def show(file_path: str) -> None:
+    """Show what changes would be made to the source code."""
+    module, changes = create(file_path)
     print_changed(module, changes)
+
+
+@app.command()
+def diff(file_path: str) -> None:
+    """Show the diff of the changes to be made to the source code."""
+    module, changes = create(file_path)
+    after = apply_changes(module, changes)
+    before = inspect.getsource(module).splitlines()
+    diff = difflib.unified_diff(before, after, lineterm="")
+    typer.echo("\n".join(diff))
+
+
+@app.command()
+def write(file_path: str) -> None:
+    """Write the changes to the source code."""
+    module, changes = create(file_path)
+    src = apply_changes(module, changes)
+    with pathlib.Path(file_path).open(mode="w", encoding="UTF-8") as f:
+        f.write("\n".join(src))
 
 
 if __name__ == "__main__":
