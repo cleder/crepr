@@ -12,10 +12,11 @@ import importlib.machinery
 import inspect
 import pathlib
 import uuid
-from collections.abc import Iterable
+from collections.abc import Iterator
 from types import MappingProxyType
 from types import ModuleType
 from typing import Annotated
+from typing import Optional
 from typing import TypedDict
 
 import typer
@@ -28,6 +29,37 @@ class Change(TypedDict):
 
     class_name: str
     lines: list[str]
+
+
+file_arg = typer.Argument(help="The python source file(s)")
+splat_option = typer.Option(help="The **kwarg splat")
+diff_inline_option = typer.Option(
+    "--diff/--inline",
+    help="Display the diff / Apply changes to the file(s)",
+)
+
+
+def get_method_source(cls: type, method_name: str) -> tuple[str, int]:
+    """Get the source code and line number of a method of a class.
+
+    Args:
+    ----
+        cls (type): The class to inspect.
+        method_name (str): The name of the method to get the source code of.
+
+    Returns:
+    -------
+        tuple[str, int]: A tuple containing the source code of the method and
+        the line number where it was found, or an empty string and -1 if the class
+        does not have the specified method.
+
+    """
+    if method_name in cls.__dict__:
+        method = cls.__dict__[method_name]
+        method_source = inspect.getsource(method)
+        method_line_number = inspect.findsource(method)[1]
+        return method_source, method_line_number
+    return "", -1
 
 
 def get_init_source(cls: type) -> tuple[str, int]:
@@ -44,17 +76,29 @@ def get_init_source(cls: type) -> tuple[str, int]:
         does not have an __init__ method.
 
     """
-    if "__init__" in cls.__dict__:
-        init_method = cls.__init__  # type: ignore[misc]
-        init_source = inspect.getsource(init_method)
-        init_line_number = inspect.findsource(init_method)[1]
-        return init_source, init_line_number
-    return "", -1
+    return get_method_source(cls, "__init__")
+
+
+def get_repr_source(cls: type) -> tuple[str, int]:
+    """Get the source code and line number of the __repr__ method of a class.
+
+    Args:
+    ----
+        cls (type): The class to inspect.
+
+    Returns:
+    -------
+        tuple[str, int]: A tuple containing the source code of the __repr__ method and
+        the line number where it was found, or an empty string and -1 if the class
+        does not have an __repr__ method.
+
+    """
+    return get_method_source(cls, "__repr__")
 
 
 def get_init_args(
     cls: type,
-) -> tuple[str, MappingProxyType[str, inspect.Parameter] | None, int, str | None]:
+) -> tuple[MappingProxyType[str, inspect.Parameter] | None, int, list[str]]:
     """Get the __init__ arguments of a class.
 
     Args:
@@ -63,9 +107,10 @@ def get_init_args(
 
     Returns:
     -------
-        tuple[str, MappingProxyType[str, inspect.Parameter] | None]:
-        A tuple containing the class name and the dictionary of __init__ arguments,
-        or None if the class does not have an __init__ method.
+        tuple[str, MappingProxyType[str, inspect.Parameter] | None, str]:
+        A tuple containing a dictionary of __init__ arguments, or None if the class
+        does not have an __init__ method, the line number of the __init_method,
+        and the source code lines of the __init__ method.
 
     """
     if "__init__" in cls.__dict__:
@@ -73,8 +118,8 @@ def get_init_args(
         init_method = cls.__init__  # type: ignore[misc]
         init_signature = inspect.signature(init_method)
         init_args = init_signature.parameters
-        return cls.__name__, init_args, lineno, init_source
-    return cls.__name__, None, -1, None
+        return init_args, lineno, init_source.splitlines()
+    return None, -1, []
 
 
 def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool:
@@ -121,7 +166,7 @@ def create_repr_lines(
     kwarg_splat: str,
 ) -> list[str]:
     """Create the source loc for the __repr__ method for a class."""
-    if not has_only_kwargs(init_args):
+    if not init_args:
         return []
     lines = [
         "",
@@ -142,7 +187,7 @@ def create_repr_lines(
     return lines
 
 
-def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
+def get_module(file_path: pathlib.Path) -> ModuleType:
     """Get all classes of a source file.
 
     Given a file path, loads the module and yields all classes defined in it
@@ -158,7 +203,7 @@ def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
 
     """
     try:
-        loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, file_path)
+        loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
         module = loader.load_module()
     except FileNotFoundError as e:
         typer.secho(f"Error: File '{file_path}' not found.", fg="red")
@@ -169,11 +214,10 @@ def get_class_objects(file_path: str) -> Iterable[tuple[type, ModuleType]]:
     except SyntaxError as e:
         typer.secho(f"Error: Could not parse '{file_path}'.", fg="red")
         raise typer.Exit(code=1) from e
-    for _, obj in inspect.getmembers(module, inspect.isclass):
-        yield (obj, module)
+    return module
 
 
-def apply_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
+def insert_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
     """Apply the changes to the source code of the given module.
 
     Args:
@@ -183,92 +227,132 @@ def apply_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
 
     """
     src = inspect.getsource(module).splitlines()
-    for lineno in sorted(changes.keys(), reverse=True):
-        for i, change in enumerate(changes[lineno]["lines"]):
-            src.insert(lineno + i, change)
+    for lineno, change in sorted(changes.items(), reverse=True):
+        for i, line in enumerate(change["lines"]):
+            src.insert(lineno + i, line)
     return src
 
 
-def print_changed(module: ModuleType, changes: dict[int, Change]) -> None:
-    """Print out the changes made to the source code.
+def remove_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
+    """Apply the changes to the source code of the given module.
 
-    Inserts the given changes into the source code of the given module
-    and prints the modified source code.
+    Args:
+    ----
+        module (ModuleType): The module to modify.
+        changes (dict[int, Change]): The changes to apply.
 
     """
-    src = apply_changes(module, changes)
-    typer.echo("\n".join(src))
+    src = inspect.getsource(module).splitlines()
+    for lineno, change in sorted(changes.items(), reverse=True):
+        for line in change["lines"]:
+            assert src[lineno] == line  # noqa: S101
+            del src[lineno]
+    return src
 
 
-def create(file_path: str, kwarg_splat: str) -> tuple[ModuleType, dict[int, Change]]:
-    """Create a __repr__ method for each class of a python file."""
-    classes_processed = 0
-    changes: dict[int, Change] = {}
-    module = None
-    for obj, module in get_class_objects(file_path):
+def get_all_init_args(
+    module: ModuleType,
+) -> Iterator[tuple[type, MappingProxyType[str, inspect.Parameter], int, list[str]]]:
+    """Get the __init__ arguments of all classes in a module.
+
+    Args:
+    ----
+        module (ModuleType): The module to inspect.
+
+    Returns:
+    -------
+        Iterator[tuple[MappingProxyType[str, inspect.Parameter], int, list[str]]]:
+        An iterator of tuples containing a dictionary of __init__ arguments,
+        the line number of the __init_method, and the source code lines of the __init__
+        method.
+
+    """
+    for _, obj in inspect.getmembers(module, inspect.isclass):
         if not is_class_in_module(obj, module):
             continue
-        class_name, init_args, lineno, source = get_init_args(obj)
+        init_args, lineno, source = get_init_args(obj)
         if not init_args:
             continue
-        assert init_args is not None  # noqa: S101
-        new_lines = create_repr_lines(class_name, init_args, kwarg_splat)
-        assert source is not None  # noqa: S101
-        end_line = len(source.splitlines()) + lineno
-        changes[end_line] = {"lines": new_lines, "class_name": class_name}
-        classes_processed += 1
-    if not classes_processed:
-        typer.secho(
-            f"Error: No __repr__ could be generated for '{file_path}'.",
-            fg="red",
-        )
-        raise typer.Exit(code=1)
-    assert module is not None  # noqa: S101
+        if not has_only_kwargs(init_args):
+            continue
+        yield obj, init_args, lineno, source
+
+
+def create_repr(
+    file_path: pathlib.Path,
+    kwarg_splat: str,
+) -> tuple[ModuleType, dict[int, Change]]:
+    """Create a __repr__ method for each class of a python file."""
+    changes: dict[int, Change] = {}
+    module = get_module(file_path)
+    for obj, init_args, lineno, source in get_all_init_args(module):
+        new_lines = create_repr_lines(obj.__name__, init_args, kwarg_splat)
+        changes[lineno + len(source)] = {
+            "lines": new_lines,
+            "class_name": obj.__name__,
+        }
     return module, changes
 
 
-file_arg = typer.Argument(help="The python source file")
-splat_option = typer.Option(
-    help="The **kwarg splat",
-)
+def remove_repr(file_path: pathlib.Path) -> tuple[ModuleType, dict[int, Change]]:
+    """Remove the __repr__ method for each class of a python file."""
+    changes: dict[int, Change] = {}
+    module = get_module(file_path)
+    for obj, _, _, _ in get_all_init_args(module):
+        lines_to_remove, lineno = get_repr_source(obj)
+        changes[lineno] = {
+            "lines": lines_to_remove.splitlines(),
+            "class_name": obj.__name__,
+        }
+    return module, changes
 
 
 @app.command()
-def show(
-    file_path: Annotated[str, file_arg],
+def add(
+    files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "...",
+    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
 ) -> None:
-    """Show what changes would be made to the source code."""
-    module, changes = create(file_path, kwarg_splat)
-    print_changed(module, changes)
+    """Add __repr__ to all classes in the source code."""
+    for file_path in files:
+        module, changes = create_repr(file_path, kwarg_splat)
+        if not changes:
+            continue
+        src = insert_changes(module, changes)
+        if diff is None:
+            typer.echo("\n".join(src))
+        elif diff:
+            before = inspect.getsource(module).splitlines()
+            _diff = difflib.unified_diff(before, src, lineterm="")
+            typer.echo("\n".join(_diff))
+            continue
+        else:
+            with file_path.open(mode="w", encoding="UTF-8") as f:
+                f.write("\n".join(src))
 
 
 @app.command()
-def diff(
-    file_path: Annotated[str, file_arg],
-    kwarg_splat: Annotated[str, splat_option] = "...",
+def remove(
+    files: Annotated[list[pathlib.Path], file_arg],
+    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
 ) -> None:
-    """Show the diff of the changes to be made to the source code."""
-    module, changes = create(file_path, kwarg_splat)
-    after = apply_changes(module, changes)
-    before = inspect.getsource(module).splitlines()
-    diff = difflib.unified_diff(before, after, lineterm="")
-    typer.echo("\n".join(diff))
-
-
-@app.command()
-def write(
-    file_path: Annotated[str, file_arg],
-    kwarg_splat: Annotated[str, splat_option] = "...",
-) -> None:
-    """Write the changes to the source code."""
-    module, changes = create(file_path, kwarg_splat)
-    src = apply_changes(module, changes)
-    with pathlib.Path(file_path).open(mode="w", encoding="UTF-8") as f:
-        f.write("\n".join(src))
+    """Remove the __repr__ method from all classes in the source code."""
+    for file_path in files:
+        module, changes = remove_repr(file_path)
+        if not changes:
+            continue
+        src = remove_changes(module, changes)
+        if diff is None:
+            typer.echo("\n".join(src))
+        elif diff:
+            before = inspect.getsource(module).splitlines()
+            _diff = difflib.unified_diff(before, src, lineterm="")
+            typer.echo("\n".join(_diff))
+            continue
+        else:
+            with file_path.open(mode="w", encoding="UTF-8") as f:
+                f.write("\n".join(src))
 
 
 if __name__ == "__main__":
     app()
-
-__all__ = ["create"]

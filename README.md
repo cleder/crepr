@@ -33,7 +33,7 @@ pip install crepr
 ## Usage
 
 ```bash
-❯ crepr --help
+❯ crepr  --help
 Usage: crepr [OPTIONS] COMMAND [ARGS]...
 
 Options:
@@ -45,9 +45,48 @@ Options:
   --help                          Show this message and exit.
 
 Commands:
-  diff   Show the diff of the changes made to the source code.
-  show   Show what changes would be made to the source code.
-  write  Write the changes to the source code.
+  add     Add __repr__ to all classes in the source code.
+  remove  Remove the __repr__ method from all classes in the source code.
+```
+
+### Add
+
+The command `crepr add ...`  adds a `__repr__` method to all classes in this file, that
+have a `__init__` method with no positional only arguments.
+
+```bash
+❯ crepr add  --help
+Usage: crepr add [OPTIONS] FILES...
+
+  Add __repr__ to all classes in the source code.
+
+Arguments:
+  FILES...  The python source file(s)  [required]
+
+Options:
+  --kwarg-splat TEXT  The **kwarg splat  [default: ...]
+  --diff / --inline   Display the diff / Apply changes to the file(s)
+  --help              Show this message and exit.
+```
+
+### Remove
+
+The command `crepr remove ...` removes the `__repr__` methods from all classes that have
+an `__init__` method with no positional only arguments.
+
+
+```bash
+❯ crepr remove  --help
+Usage: crepr remove [OPTIONS] FILES...
+
+  Remove the __repr__ method from all classes in the source code.
+
+Arguments:
+  FILES...  The python source file(s)  [required]
+
+Options:
+  --diff / --inline  Display the diff / Apply changes to the file(s)
+  --help             Show this message and exit.
 ```
 
 ## Example
@@ -64,7 +103,7 @@ class KwOnly:
 The command:
 
 ```bash
-❯ crepr show tests/classes/kw_only_test.py
+❯ crepr add tests/classes/kw_only_test.py
 ```
 
 produces
@@ -90,6 +129,12 @@ The `repr()` of an instance of this class will be:
 >>> kwo = KwOnly('Christian', age=25)
 >>> kwo
 tests.classes.kw_only_test.KwOnly(name='Christian', age=25, )
+```
+
+Apply the changes to the file with:
+
+```bash
+❯ crepr add tests/classes/kw_only_test.py --inline
 ```
 
 Give your representations some love.
