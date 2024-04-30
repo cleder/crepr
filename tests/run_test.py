@@ -80,6 +80,13 @@ def test_get_init_splat_kwargs() -> None:
     assert init_args["kwargs"].kind == inspect.Parameter.VAR_KEYWORD
 
 
+def test_get_init_args_dataclass() -> None:
+    """Test get_init_args with a dataclass."""
+    module = crepr.get_module("tests/classes/dataclass_test.py")
+    for params in crepr.get_all_init_args(module):
+        pytest.fail(f"Unexpected class: {params}")
+
+
 def test_has_only_kwargs() -> None:
     """Test has_only_kwargs."""
     init_args = {

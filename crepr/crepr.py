@@ -54,12 +54,16 @@ def get_method_source(cls: type, method_name: str) -> tuple[str, int]:
         does not have the specified method.
 
     """
-    if method_name in cls.__dict__:
-        method = cls.__dict__[method_name]
+    if method_name not in cls.__dict__:
+        return "", -1
+    method = cls.__dict__[method_name]
+    try:
         method_source = inspect.getsource(method)
         method_line_number = inspect.findsource(method)[1]
+    except OSError:
+        return "", -1
+    else:
         return method_source, method_line_number
-    return "", -1
 
 
 def get_init_source(cls: type) -> tuple[str, int]:
@@ -271,9 +275,7 @@ def get_all_init_args(
         if not is_class_in_module(obj, module):
             continue
         init_args, lineno, source = get_init_args(obj)
-        if not init_args:
-            continue
-        if not has_only_kwargs(init_args):
+        if not init_args or lineno == -1 or not has_only_kwargs(init_args):
             continue
         yield obj, init_args, lineno, source
 
