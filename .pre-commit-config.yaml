@@ -4,7 +4,7 @@ repos:
     hooks:
       - id: check-useless-excludes
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v4.6.0
     hooks:
       - id: check-added-large-files
       - id: check-docstring-first
@@ -32,20 +32,20 @@ repos:
     hooks:
       - id: absolufy-imports
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.0
+    rev: 5.13.2
     hooks:
       - id: isort
   - repo: https://github.com/psf/black
-    rev: 23.11.0
+    rev: 24.4.2
     hooks:
       - id: black
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.1.7'
+    rev: 'v0.4.3'
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
   - repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
+    rev: 7.0.0
     hooks:
       - id: flake8
         args: [--max-line-length=88, --extend-ignore=E203, --extend-ignore=W503]
@@ -65,13 +65,13 @@ repos:
           - flake8-super
           - flake8-use-fstring
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.7.1
+    rev: v1.10.0
     hooks:
       - id: mypy
         args: [--strict]
         additional_dependencies: ["typer", "pytest"]
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.15
+    rev: v0.16
     hooks:
       - id: validate-pyproject
   - repo: https://github.com/kieran-ryan/pyprojectsort
@@ -79,7 +79,7 @@ repos:
     hooks:
       - id: pyprojectsort
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.27.3"
+    rev: "0.28.2"
     hooks:
       - id: check-github-workflows
       - id: check-github-actions
