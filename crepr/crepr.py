@@ -134,8 +134,6 @@ def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool
         bool: True if the init_args only contain keyword arguments, False otherwise.
 
     """
-    if not init_args:
-        return False
     return all(
         param.kind
         in {

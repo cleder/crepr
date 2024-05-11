@@ -83,8 +83,15 @@ def test_get_init_splat_kwargs() -> None:
 def test_get_init_args_dataclass() -> None:
     """Test get_init_args with a dataclass."""
     module = crepr.get_module("tests/classes/dataclass_test.py")
-    for params in crepr.get_all_init_args(module):
-        pytest.fail(f"Unexpected class: {params}")
+    assert not list(crepr.get_all_init_args(module))
+
+
+def test_get_repr_dataclass() -> None:
+    """Test get_repr with a dataclass."""
+    module = crepr.get_module("tests/classes/dataclass_test.py")
+
+    for _, obj in inspect.getmembers(module, inspect.isclass):
+        assert crepr.get_method_source(obj, "__repr__") == ("", -1)
 
 
 def test_has_only_kwargs() -> None:
@@ -267,3 +274,12 @@ def test_show_remove() -> None:
     assert result.exit_code == 0
     assert "__repr__" not in result.stdout
     assert len(result.stdout.splitlines()) == 13
+
+
+def test_show_remove_no_repr() -> None:
+    """Test the app happy path."""
+    result = runner.invoke(crepr.app, ["remove", "tests/classes/class_no_init_test.py"])
+
+    assert result.exit_code == 0
+    assert "__repr__" not in result.stdout
+    assert len(result.stdout.splitlines()) == 0

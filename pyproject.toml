@@ -102,6 +102,10 @@ exclude_also = [
 
 [tool.coverage.run]
 branch = true
+omit = [
+    "tests/classes/*",
+    "tests/remove/*",
+]
 
 [tool.flake8]
 max_line_length = 88
