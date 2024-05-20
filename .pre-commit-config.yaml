@@ -71,7 +71,7 @@ repos:
         args: [--strict]
         additional_dependencies: ["typer", "pytest"]
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.17
+    rev: v0.18
     hooks:
       - id: validate-pyproject
   - repo: https://github.com/kieran-ryan/pyprojectsort
