@@ -55,7 +55,7 @@ jobs:
         run: |
           flake8 crepr tests --max-line-length=88
           black --check crepr tests
-          ruff --no-fix crepr tests
+          ruff check --no-fix crepr tests
           yamllint .github/workflows/
       - name: Check complexity
         run: |

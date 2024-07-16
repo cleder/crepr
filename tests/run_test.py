@@ -56,10 +56,10 @@ def test_get_init_args() -> None:
     assert init_args["self"].name == "self"
     assert init_args["name"].name == "name"
     assert init_args["name"].default is inspect._empty
-    assert init_args["name"].annotation == str
+    assert init_args["name"].annotation is str
     assert init_args["age"].name == "age"
     assert init_args["age"].default is inspect._empty
-    assert init_args["age"].annotation == int
+    assert init_args["age"].annotation is int
     assert lineno == 8
     assert src[0] == "    def __init__(self: Self, name: str, *, age: int) -> None:"
 
