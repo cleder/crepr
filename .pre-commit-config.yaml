@@ -61,7 +61,6 @@ repos:
           - flake8-pep3101
           - flake8-print
           - flake8-simplify
-          - flake8-string-format
           - flake8-super
           - flake8-use-fstring
   - repo: https://github.com/pre-commit/mirrors-mypy
