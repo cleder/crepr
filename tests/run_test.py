@@ -158,7 +158,11 @@ def test_create_repr_lines_splat_kwargs() -> None:
         "kwargs": inspect.Parameter("kwargs", inspect.Parameter.VAR_KEYWORD),
     }
 
-    lines = crepr.create_repr_lines(class_name, init_args, kwarg_splat="{}")
+    lines = crepr.create_repr_lines(
+        class_name,
+        init_args,
+        kwarg_splat="{}",
+    )
     assert lines == [
         "",
         "    def __repr__(self) -> str:",
