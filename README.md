@@ -2,14 +2,13 @@
 
 Create a ``__repr__`` for your python classes.
 
-A Python script that takes a file path as a command-line argument,
-imports the specified file, and creates a `__repr__` method
-for each class defined in the module.
-It uses the definition found in the  `__init__` method of the class.
+
+`crepr` is a Python script that takes a file name as a command-line argument, imports the specified module, and then adds or removes a `__repr__` method for each class defined in the module. It uses the definition found in the  `__init__` method of the class to create a useful representation of the object.
 It is pronounced /kɹeɪpr/, like 🇳🇿 crêpe.
 
 Have a look at the blog-post [Love Your Representation
 ](https://dev.to/ldrscke/love-your-representation-27mm) for the rationale of this package.
+
 
 [![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg?branch=main)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
@@ -24,6 +23,14 @@ Have a look at the blog-post [Love Your Representation
 [![PyPI - Version](https://img.shields.io/pypi/v/crepr)](https://pypi.org/project/crepr/)
 [![Status](https://img.shields.io/pypi/status/crepr)](https://pypi.org/project/crepr/)
 
+
+## Features
+
+* Automatically generates `__repr__` methods for all classes in a Python file
+* Uses the `__init__` method's arguments to create a meaningful representation
+* Can add or remove `__repr__` methods
+* Provides options to display the diff or apply changes directly to the file
+
 ## Install
 
 ```bash
@@ -32,62 +39,24 @@ pip install crepr
 
 ## Usage
 
-```bash
-❯ crepr  --help
-Usage: crepr [OPTIONS] COMMAND [ARGS]...
-
-Options:
-  --install-completion [bash|zsh|fish|powershell|pwsh]
-                                  Install completion for the specified shell.
-  --show-completion [bash|zsh|fish|powershell|pwsh]
-                                  Show completion for the specified shell, to
-                                  copy it or customize the installation.
-  --help                          Show this message and exit.
-
-Commands:
-  add     Add __repr__ to all classes in the source code.
-  remove  Remove the __repr__ method from all classes in the source code.
-```
-
-### Add
-
-The command `crepr add ...`  adds a `__repr__` method to all classes in this file, that
-have a `__init__` method with no positional only arguments.
+To add a `__repr__` method to all classes in a file:
 
 ```bash
-❯ crepr add  --help
-Usage: crepr add [OPTIONS] FILES...
-
-  Add __repr__ to all classes in the source code.
-
-Arguments:
-  FILES...  The python source file(s)  [required]
-
-Options:
-  --kwarg-splat TEXT  The **kwarg splat  [default: ...]
-  --diff / --inline   Display the diff / Apply changes to the file(s)
-  --help              Show this message and exit.
+crepr add <file_name> [--kwarg-splat "..."] [--diff/--inline]
 ```
 
-### Remove
-
-The command `crepr remove ...` removes the `__repr__` methods from all classes that have
-an `__init__` method with no positional only arguments.
-
+To remove the `__repr__` method from all classes in a file:
 
 ```bash
-❯ crepr remove  --help
-Usage: crepr remove [OPTIONS] FILES...
-
-  Remove the __repr__ method from all classes in the source code.
-
-Arguments:
-  FILES...  The python source file(s)  [required]
-
-Options:
-  --diff / --inline  Display the diff / Apply changes to the file(s)
-  --help             Show this message and exit.
+crepr remove <file_name> [--diff/--inline]
 ```
+
+### Options
+
+* `<file_name>`: The name of the Python file to process.
+* `--kwarg-splat`: The string to use for the **kwargs splat (default: "...").
+* `--diff`: Display the diff of the changes.
+* `--inline`: Apply the changes directly to the file.
 
 ## Example
 

@@ -180,7 +180,7 @@ def create_repr_lines(
         (
             f"            f'{arg_name}={{self.{arg_name}!r}}, '"
             if arg_param.kind != inspect.Parameter.VAR_KEYWORD
-            else f"            f'**{arg_name}={kwarg_splat},'"
+            else f"            f'**{kwarg_splat},'"
         )
         for arg_name, arg_param in init_args.items()
         if arg_name != "self"
@@ -310,7 +310,7 @@ def remove_repr(file_path: pathlib.Path) -> tuple[ModuleType, dict[int, Change]]
 @app.command()
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
-    kwarg_splat: Annotated[str, splat_option] = "...",
+    kwarg_splat: Annotated[str, splat_option] = "{}",
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
 ) -> None:
     """Add __repr__ to all classes in the source code."""
