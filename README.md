@@ -3,7 +3,7 @@
 Create a ``__repr__`` for your python classes.
 
 
-`crepr` is a Python script that takes a file name as a command-line argument, imports the specified module, and then adds or removes a `__repr__` method for each class defined in the module. It uses the definition found in the  `__init__` method of the class to create a useful representation of the object.
+`crepr` is a Python script that takes a file name as a command-line argument, imports the specified module, and then adds or removes a `__repr__` method for each class defined in the module. It uses the definition found in the `__init__` method of the class to create a useful representation of the object.
 It is pronounced /kɹeɪpr/, like 🇳🇿 crêpe.
 
 Have a look at the blog-post [Love Your Representation
@@ -54,7 +54,7 @@ crepr remove <file_name> [--diff/--inline]
 ### Options
 
 * `<file_name>`: The name of the Python file to process.
-* `--kwarg-splat`: The string to use for the **kwargs splat (default: "...").
+* `--kwarg-splat`: The string to use for the **kwargs splat (default: "{}").
 * `--diff`: Display the diff of the changes.
 * `--inline`: Apply the changes directly to the file.
 
