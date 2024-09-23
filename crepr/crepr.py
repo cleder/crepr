@@ -303,7 +303,9 @@ def filter_no_repr(classes: list[type]) -> list[str]:
 
 
 def report_results(
-    file_path: pathlib.Path, classes: list[type], no_repr_classes: list[str],
+    file_path: pathlib.Path,
+    classes: list[type],
+    no_repr_classes: list[str],
 ) -> None:
     """Report the results of classes without a __repr__ method."""
     if no_repr_classes:
