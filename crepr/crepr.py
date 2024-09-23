@@ -353,6 +353,37 @@ def remove(
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
+@app.command()
+def report_missing(
+    files: Annotated[list[pathlib.Path], file_arg]
+) -> None:
+    """Count and print classes without a __repr__ method in the source code."""
+    for file_path in files:
+        module = get_module(file_path)
+        class_count = 0
+        no_repr_classes = []
+        
+        for _, obj in inspect.getmembers(module, inspect.isclass):
+            if not is_class_in_module(obj, module):
+                continue
+            _, lineno = get_repr_source(obj)
+            if lineno == -1:
+                no_repr_classes.append((lineno, obj.__name__))
+            class_count += 1
+
+        if no_repr_classes:
+            typer.secho(
+                f"In module '{file_path}': {len(no_repr_classes)} class(es) "
+                "don't have a __repr__ method:",
+                fg="yellow"
+            )
+            for lineno, class_name in no_repr_classes:
+                typer.echo(f"{file_path}: {class_name}")
+        else:
+            typer.secho(
+                f"All {class_count} class(es) in module '{file_path}' have a __repr__ method.",
+                fg="green"
+            )
 
 if __name__ == "__main__":
     app()
