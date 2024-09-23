@@ -5,12 +5,8 @@ import inspect
 import pathlib
 import uuid
 from collections.abc import Iterable
-from collections.abc import Iterator
-from types import MappingProxyType
-from types import ModuleType
-from typing import Annotated
-from typing import Self
-from typing import TypedDict
+from types import MappingProxyType, ModuleType
+from typing import Annotated, Iterator, List, Optional, Self, Type, TypedDict
 
 import typer
 
@@ -108,7 +104,7 @@ def create_repr_lines(
     lines = [
         "",
         "    def __repr__(self) -> str:",
-        f'        """Create a string (c)representation for {class_name}."""',
+        '        """Create a string (c)representation for {}."""'.format(class_name),
         "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
     ]
     lines.extend(
@@ -130,13 +126,13 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
         loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
         module = loader.load_module()
     except FileNotFoundError as e:
-        message = f"Error: File '{file_path}' not found."
+        message = "Error: File '{}' not found.".format(file_path)
         raise CreprError(message, exit_code=1) from e
     except ImportError as e:
-        message = f"Error: Could not import '{file_path}'."
+        message = "Error: Could not import '{}'.".format(file_path)
         raise CreprError(message, exit_code=1) from e
     except SyntaxError as e:
-        message = f"Error: Could not parse '{file_path}'."
+        message = "Error: Could not parse '{}'.".format(file_path)
         raise CreprError(message, exit_code=1) from e
     return module
 
@@ -217,7 +213,7 @@ def get_modules(
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
-    diff: Annotated[bool | None, diff_inline_option] = None,
+    diff: Annotated[Optional[bool], diff_inline_option] = None,
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
@@ -240,7 +236,7 @@ def add(
 @app.command()
 def remove(
     files: Annotated[list[pathlib.Path], file_arg],
-    diff: Annotated[bool | None, diff_inline_option] = None,
+    diff: Annotated[Optional[bool], diff_inline_option] = None,
 ) -> None:
     """Remove the __repr__ method from all classes in the source code."""
     for module, file_path in get_modules(files):
@@ -273,18 +269,13 @@ def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
 def process_file(file_path: pathlib.Path) -> None:
     """Process a single file and report classes without a __repr__ method."""
     module = load_module(file_path)
-    if module is None:
-        typer.secho(
-            f"Error: Could not load module from {file_path}", fg="red", err=True,
-        )
-        return
-
-    classes = extract_classes(module)
-    no_repr_classes = filter_no_repr(classes)
-    report_results(file_path, classes, no_repr_classes)
+    if module is not None:
+        classes = extract_classes(module)
+        no_repr_classes = filter_no_repr(classes)
+        report_results(file_path, classes, no_repr_classes)
 
 
-def load_module(file_path: pathlib.Path) -> ModuleType | None:
+def load_module(file_path: pathlib.Path) -> Optional[ModuleType]:
     """Load a module from a given file path."""
     try:
         return get_module(file_path)
@@ -293,37 +284,44 @@ def load_module(file_path: pathlib.Path) -> ModuleType | None:
         return None
 
 
-def extract_classes(module: ModuleType) -> list[type]:
+def extract_classes(module: ModuleType) -> List[Type]:
     """Extract classes from a module."""
     return [
-        obj
-        for _, obj in inspect.getmembers(module, inspect.isclass)
+        obj for _, obj in inspect.getmembers(module, inspect.isclass)
         if is_class_in_module(obj, module)
     ]
 
 
-def filter_no_repr(classes: list[type]) -> list[str]:
+def filter_no_repr(classes: List[Type]) -> List[str]:
     """Filter out classes without a __repr__ method."""
-    return [obj.__name__ for obj in classes if get_repr_source(obj)[1] == -1]
+    return [
+        obj.__name__ for obj in classes
+        if get_repr_source(obj)[1] == -1
+    ]
 
 
 def report_results(
-    file_path: pathlib.Path, classes: list[type], no_repr_classes: list[str],
+    file_path: pathlib.Path,
+    classes: List[Type],
+    no_repr_classes: List[str]
 ) -> None:
     """Report the results of classes without a __repr__ method."""
     if no_repr_classes:
         typer.secho(
-            f"In module '{file_path}': {len(no_repr_classes)} class(es) don't have a __repr__ method:",
-            fg="yellow",
+            "In module '{}': {} class(es) don't have a __repr__ method:".format(
+                file_path, len(no_repr_classes)
+            ),
+            fg="yellow"
         )
         for class_name in no_repr_classes:
-            typer.echo(f"{file_path}: {class_name}")
+            typer.echo("{}: {}".format(file_path, class_name))
     else:
         typer.secho(
-            f"All {len(classes)} class(es) in module '{file_path}' have a __repr__ method.",
-            fg="green",
+            "All {} class(es) in module '{}' have a __repr__ method.".format(
+                len(classes), file_path
+            ),
+            fg="green"
         )
-
 
 if __name__ == "__main__":
     app()
