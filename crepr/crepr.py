@@ -375,7 +375,8 @@ def remove(
         else:
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
-                
+
+
 @app.command()
 def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
     """Count and print classes without a __repr__ method in the source code."""
@@ -396,7 +397,7 @@ def process_file(file_path: pathlib.Path) -> None:
             report_results(file_path, classes, no_repr_classes)
 
 
-def load_module(file_path: pathlib.Path) -> Optional[ModuleType]:
+def load_module(file_path: pathlib.Path) -> ModuleType | None:
     """Load a module from a given file path."""
     try:
         return get_module(file_path)
@@ -409,7 +410,8 @@ def extract_classes(module: ModuleType, file_path: pathlib.Path) -> List[Type]:
     """Extract classes from a module."""
     try:
         return [
-            obj for _, obj in inspect.getmembers(module, inspect.isclass)
+            obj
+            for _, obj in inspect.getmembers(module, inspect.isclass)
             if is_class_in_module(obj, module)
         ]
     except CreprError as e:
@@ -419,19 +421,18 @@ def extract_classes(module: ModuleType, file_path: pathlib.Path) -> List[Type]:
 
 def filter_no_repr(classes: List[Type]) -> List[str]:
     """Filter out classes without a __repr__ method."""
-    return [
-        obj.__name__ for obj in classes
-        if get_repr_source(obj)[1] == -1
-    ]
+    return [obj.__name__ for obj in classes if get_repr_source(obj)[1] == -1]
 
 
-def report_results(file_path: pathlib.Path, classes: List[Type], no_repr_classes: List[str]) -> None:
+def report_results(
+    file_path: pathlib.Path, classes: List[Type], no_repr_classes: List[str],
+) -> None:
     """Report the results of classes without a __repr__ method."""
     if no_repr_classes:
         typer.secho(
             f"In module '{file_path}': {len(no_repr_classes)} class(es) "
             "don't have a __repr__ method:",
-            fg="yellow"
+            fg="yellow",
         )
         for class_name in no_repr_classes:
             typer.echo(f"{file_path}: {class_name}")
@@ -439,8 +440,9 @@ def report_results(file_path: pathlib.Path, classes: List[Type], no_repr_classes
         typer.secho(
             f"All {len(classes)} class(es) in module '{file_path}' "
             "have a __repr__ method.",
-            fg="green"
+            fg="green",
         )
+
 
 if __name__ == "__main__":
     app()
