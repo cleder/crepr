@@ -363,10 +363,10 @@ def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
         except FileNotFoundError:
             typer.secho(f"File '{file_path}' not found.", fg="red")
         except ImportError as e:
-            error_message = f"Error importing module from '{file_path}': {str(e)}"
+            error_message = f"Error importing module from '{file_path}': {e!s}"
             typer.secho(error_message, fg="red")
         except Exception as e:
-            error_message = f"An unexpected error occurred: {str(e)}"
+            error_message = f"An unexpected error occurred: {e!s}"
             typer.secho(error_message, fg="red")
 
 
@@ -383,7 +383,7 @@ def load_module(file_path: pathlib.Path) -> ModuleType:
     try:
         return get_module(file_path)
     except ImportError as e:
-        error_message = f"Failed to load module from {file_path}: {str(e)}"
+        error_message = f"Failed to load module from {file_path}: {e!s}"
         raise ImportError(error_message) from None
 
 
@@ -391,29 +391,29 @@ def extract_classes(module: ModuleType, file_path: pathlib.Path) -> list[type]:
     """Extract classes from a module."""
     try:
         return [
-            obj for _, obj in inspect.getmembers(module, inspect.isclass)
+            obj
+            for _, obj in inspect.getmembers(module, inspect.isclass)
             if is_class_in_module(obj, module)
         ]
     except AttributeError as e:
-        error_message = f"Error processing classes in {file_path}: {str(e)}"
+        error_message = f"Error processing classes in {file_path}: {e!s}"
         raise AttributeError(error_message) from None
 
 
 def filter_no_repr(classes: list[type]) -> list[str]:
     """Filter out classes without a __repr__ method."""
-    return [
-        obj.__name__ for obj in classes
-        if get_repr_source(obj)[1] == -1
-    ]
+    return [obj.__name__ for obj in classes if get_repr_source(obj)[1] == -1]
 
 
-def report_results(file_path: pathlib.Path, classes: list[type], no_repr_classes: list[str]) -> None:
+def report_results(
+    file_path: pathlib.Path, classes: list[type], no_repr_classes: list[str],
+) -> None:
     """Report the results of classes without a __repr__ method."""
     if no_repr_classes:
         typer.secho(
             f"In module '{file_path}': {len(no_repr_classes)} class(es) "
             "don't have a __repr__ method:",
-            fg="yellow"
+            fg="yellow",
         )
         for class_name in no_repr_classes:
             typer.echo(f"{file_path}: {class_name}")
@@ -421,10 +421,9 @@ def report_results(file_path: pathlib.Path, classes: list[type], no_repr_classes
         typer.secho(
             f"All {len(classes)} class(es) in module '{file_path}' "
             "have a __repr__ method.",
-            fg="green"
+            fg="green",
         )
+
 
 if __name__ == "__main__":
     app()
-
-
