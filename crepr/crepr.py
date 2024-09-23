@@ -353,55 +353,71 @@ def remove(
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
-
 @app.command()
 def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
     """Count and print classes without a __repr__ method in the source code."""
     for file_path in files:
         try:
-            # Attempt to load the module
-            module = get_module(file_path)
-        except ModuleNotFoundError:
-            # Handle the case where __init__.py is missing or the module cannot be loaded
-            typer.secho(
-                f"Error: Couldn't load module '{file_path}'. "
-                f"Ensure it contains an __init__.py file.",
-                fg="red",
-            )
-            continue  # Skip to the next file
-
-        class_count = 0
-        no_repr_classes = []
-
-        try:
-            for _, obj in inspect.getmembers(module, inspect.isclass):
-                if not is_class_in_module(obj, module):
-                    continue
-                _, lineno = get_repr_source(obj)
-                if lineno == -1:
-                    no_repr_classes.append((lineno, obj.__name__))
-                class_count += 1
+            process_file(file_path)
+        except FileNotFoundError:
+            typer.secho(f"File '{file_path}' not found.", fg="red")
+        except ImportError as e:
+            typer.secho(f"Error importing module from '{file_path}': {e}", fg="red")
         except Exception as e:
-            typer.secho(
-                f"Error: An issue occurred while inspecting '{file_path}': {e!s}",
-                fg="red",
-            )
-            continue
+            typer.secho(f"An unexpected error occurred: {e}", fg="red")
 
-        if no_repr_classes:
-            typer.secho(
-                f"In module '{file_path}': {len(no_repr_classes)} class(es) "
-                "don't have a __repr__ method:",
-                fg="yellow",
-            )
-            for lineno, class_name in no_repr_classes:
-                typer.echo(f"{file_path} {lineno}: {class_name}")  # Updated format
-        else:
-            typer.secho(
-                f"All {class_count} class(es) in module '{file_path}' have a __repr__ method.",
-                fg="green",
-            )
 
+def process_file(file_path: pathlib.Path) -> None:
+    """Process a single file and report classes without a __repr__ method."""
+    module = load_module(file_path)
+    classes = extract_classes(module, file_path)
+    no_repr_classes = filter_no_repr(classes)
+    report_results(file_path, classes, no_repr_classes)
+
+
+def load_module(file_path: pathlib.Path):
+    """Load a module from a given file path."""
+    try:
+        return get_module(file_path)
+    except ImportError as e:
+        raise ImportError(f"Failed to load module from {file_path}: {e}")
+
+
+def extract_classes(module, file_path: pathlib.Path):
+    """Extract classes from a module."""
+    try:
+        return [
+            obj for _, obj in inspect.getmembers(module, inspect.isclass)
+            if is_class_in_module(obj, module)
+        ]
+    except AttributeError as e:
+        raise AttributeError(f"Error processing classes in {file_path}: {e}")
+
+
+def filter_no_repr(classes):
+    """Filter out classes without a __repr__ method."""
+    return [
+        obj.__name__ for obj in classes
+        if get_repr_source(obj)[1] == -1
+    ]
+
+
+def report_results(file_path: pathlib.Path, classes: list, no_repr_classes: list) -> None:
+    """Report the results of classes without a __repr__ method."""
+    if no_repr_classes:
+        typer.secho(
+            f"In module '{file_path}': {len(no_repr_classes)} class(es) "
+            "don't have a __repr__ method:",
+            fg="yellow"
+        )
+        for class_name in no_repr_classes:
+            typer.echo(f"{file_path}: {class_name}")
+    else:
+        typer.secho(
+            f"All {len(classes)} class(es) in module '{file_path}' "
+            "have a __repr__ method.",
+            fg="green"
+        )
 
 if __name__ == "__main__":
     app()
