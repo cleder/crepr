@@ -353,10 +353,9 @@ def remove(
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
+
 @app.command()
-def report_missing(
-    files: Annotated[list[pathlib.Path], file_arg]
-) -> None:
+def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
     """Count and print classes without a __repr__ method in the source code."""
     for file_path in files:
         try:
@@ -367,13 +366,13 @@ def report_missing(
             typer.secho(
                 f"Error: Couldn't load module '{file_path}'. "
                 f"Ensure it contains an __init__.py file.",
-                fg="red"
+                fg="red",
             )
             continue  # Skip to the next file
 
         class_count = 0
         no_repr_classes = []
-        
+
         try:
             for _, obj in inspect.getmembers(module, inspect.isclass):
                 if not is_class_in_module(obj, module):
@@ -384,8 +383,8 @@ def report_missing(
                 class_count += 1
         except Exception as e:
             typer.secho(
-                f"Error: An issue occurred while inspecting '{file_path}': {str(e)}",
-                fg="red"
+                f"Error: An issue occurred while inspecting '{file_path}': {e!s}",
+                fg="red",
             )
             continue
 
@@ -393,15 +392,16 @@ def report_missing(
             typer.secho(
                 f"In module '{file_path}': {len(no_repr_classes)} class(es) "
                 "don't have a __repr__ method:",
-                fg="yellow"
+                fg="yellow",
             )
             for lineno, class_name in no_repr_classes:
                 typer.echo(f"{file_path} {lineno}: {class_name}")  # Updated format
         else:
             typer.secho(
                 f"All {class_count} class(es) in module '{file_path}' have a __repr__ method.",
-                fg="green"
+                fg="green",
             )
+
 
 if __name__ == "__main__":
     app()
