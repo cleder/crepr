@@ -1,11 +1,3 @@
-"""Create a ``__repr__`` for your python classes.
-
-A Python script that takes a file name as a command-line argument,
-imports the specified module, and then prints a ``__repr__`` method
-for each class defined in the module.
-It uses the definition found in the  ``__init__`` method of the class.
-"""
-
 import difflib
 import importlib
 import importlib.machinery
@@ -13,13 +5,8 @@ import inspect
 import pathlib
 import uuid
 from collections.abc import Iterable
-from collections.abc import Iterator
-from types import MappingProxyType
-from types import ModuleType
-from typing import Annotated
-from typing import Optional
-from typing import Self
-from typing import TypedDict
+from types import MappingProxyType, ModuleType
+from typing import Annotated, Iterator, List, Optional, Self, Type, TypedDict
 
 import typer
 
@@ -52,20 +39,7 @@ diff_inline_option = typer.Option(
 
 
 def get_method_source(cls: type, method_name: str) -> tuple[str, int]:
-    """Get the source code and line number of a method of a class.
-
-    Args:
-    ----
-        cls (type): The class to inspect.
-        method_name (str): The name of the method to get the source code of.
-
-    Returns:
-    -------
-        tuple[str, int]: A tuple containing the source code of the method and
-        the line number where it was found, or an empty string and -1 if the class
-        does not have the specified method.
-
-    """
+    """Get the source code and line number of a method of a class."""
     if method_name not in cls.__dict__:
         return "", -1
     method = cls.__dict__[method_name]
@@ -79,56 +53,19 @@ def get_method_source(cls: type, method_name: str) -> tuple[str, int]:
 
 
 def get_init_source(cls: type) -> tuple[str, int]:
-    """Get the source code and line number of the __init__ method of a class.
-
-    Args:
-    ----
-        cls (type): The class to inspect.
-
-    Returns:
-    -------
-        tuple[str, int]: A tuple containing the source code of the __init__ method and
-        the line number where it was found, or an empty string and -1 if the class
-        does not have an __init__ method.
-
-    """
+    """Get the source code and line number of the __init__ method of a class."""
     return get_method_source(cls, "__init__")
 
 
 def get_repr_source(cls: type) -> tuple[str, int]:
-    """Get the source code and line number of the __repr__ method of a class.
-
-    Args:
-    ----
-        cls (type): The class to inspect.
-
-    Returns:
-    -------
-        tuple[str, int]: A tuple containing the source code of the __repr__ method and
-        the line number where it was found, or an empty string and -1 if the class
-        does not have an __repr__ method.
-
-    """
+    """Get the source code and line number of the __repr__ method of a class."""
     return get_method_source(cls, "__repr__")
 
 
 def get_init_args(
     cls: type,
 ) -> tuple[MappingProxyType[str, inspect.Parameter] | None, int, list[str]]:
-    """Get the __init__ arguments of a class.
-
-    Args:
-    ----
-        cls (type): The class to inspect.
-
-    Returns:
-    -------
-        tuple[str, MappingProxyType[str, inspect.Parameter] | None, str]:
-        A tuple containing a dictionary of __init__ arguments, or None if the class
-        does not have an __init__ method, the line number of the __init_method,
-        and the source code lines of the __init__ method.
-
-    """
+    """Get the __init__ arguments of a class."""
     if "__init__" in cls.__dict__:
         init_source, lineno = get_init_source(cls)
         init_method = cls.__init__  # type: ignore[misc]
@@ -139,13 +76,7 @@ def get_init_args(
 
 
 def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool:
-    """Check if the given init_args dictionary contains only keyword arguments.
-
-    Returns
-    -------
-        bool: True if the init_args only contain keyword arguments, False otherwise.
-
-    """
+    """Check if the given init_args dictionary contains only keyword arguments."""
     return all(
         param.kind
         in {
@@ -158,19 +89,7 @@ def has_only_kwargs(init_args: MappingProxyType[str, inspect.Parameter]) -> bool
 
 
 def is_class_in_module(cls: type, module: ModuleType) -> bool:
-    """Check if a class is defined in a specific module.
-
-    Args:
-    ----
-        cls (type): The class to check.
-        module (ModuleType): The module to compare against.
-
-    Returns:
-    -------
-        bool: True if the class is defined in the specified module,
-              False if it is imported.
-
-    """
+    """Check if a class is defined in a specific module."""
     return inspect.getmodule(cls) == module
 
 
@@ -185,15 +104,15 @@ def create_repr_lines(
     lines = [
         "",
         "    def __repr__(self) -> str:",
-        f'        """Create a string (c)representation for {class_name}."""',
+        '        """Create a string (c)representation for {}."""'.format(class_name),
         "        return (f'{self.__class__.__module__}.{self.__class__.__name__}('",
     ]
     lines.extend(
         (
-            f"            f'{arg_name}={{self.{arg_name}!r}}, '"
+            "            f'{arg_name}={{self.{arg_name}!r}}, '"
             if arg_param.kind != inspect.Parameter.VAR_KEYWORD
-            else f"            f'**{kwarg_splat},'"
-        )
+            else "            f'**{},'"
+        ).format(arg_name, kwarg_splat)
         for arg_name, arg_param in init_args.items()
         if arg_name != "self"
     )
@@ -202,44 +121,24 @@ def create_repr_lines(
 
 
 def get_module(file_path: pathlib.Path) -> ModuleType:
-    """Get all classes of a source file.
-
-    Given a file path, loads the module and yields all classes defined in it
-    along with the module object.
-
-    Args:
-    ----
-        file_path (str): The path to the file containing the module.
-
-    Yields:
-    ------
-        tuple[type, ModuleType]: A tuple containing the class and the module objects.
-
-    """
+    """Get all classes of a source file."""
     try:
         loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
         module = loader.load_module()
     except FileNotFoundError as e:
-        message = f"Error: File '{file_path}' not found."
+        message = "Error: File '{}' not found.".format(file_path)
         raise CreprError(message, exit_code=1) from e
     except ImportError as e:
-        message = f"Error: Could not import '{file_path}'."
+        message = "Error: Could not import '{}'.".format(file_path)
         raise CreprError(message, exit_code=1) from e
     except SyntaxError as e:
-        message = f"Error: Could not parse '{file_path}'."
+        message = "Error: Could not parse '{}'.".format(file_path)
         raise CreprError(message, exit_code=1) from e
     return module
 
 
 def insert_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
-    """Apply the changes to the source code of the given module.
-
-    Args:
-    ----
-        module (ModuleType): The module to modify.
-        changes (dict[int, Change]): The changes to apply.
-
-    """
+    """Apply the changes to the source code of the given module."""
     src = inspect.getsource(module).splitlines()
     for lineno, change in sorted(changes.items(), reverse=True):
         for i, line in enumerate(change["lines"]):
@@ -248,14 +147,7 @@ def insert_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
 
 
 def remove_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
-    """Apply the changes to the source code of the given module.
-
-    Args:
-    ----
-        module (ModuleType): The module to modify.
-        changes (dict[int, Change]): The changes to apply.
-
-    """
+    """Apply the changes to the source code of the given module."""
     src = inspect.getsource(module).splitlines()
     for lineno, change in sorted(changes.items(), reverse=True):
         for line in change["lines"]:
@@ -267,20 +159,7 @@ def remove_changes(module: ModuleType, changes: dict[int, Change]) -> list[str]:
 def get_all_init_args(
     module: ModuleType,
 ) -> Iterator[tuple[type, MappingProxyType[str, inspect.Parameter], int, list[str]]]:
-    """Get the __init__ arguments of all classes in a module.
-
-    Args:
-    ----
-        module (ModuleType): The module to inspect.
-
-    Returns:
-    -------
-        Iterator[tuple[MappingProxyType[str, inspect.Parameter], int, list[str]]]:
-        An iterator of tuples containing a dictionary of __init__ arguments,
-        the line number of the __init_method, and the source code lines of the __init__
-        method.
-
-    """
+    """Get the __init__ arguments of all classes in a module."""
     for _, obj in inspect.getmembers(module, inspect.isclass):
         if not is_class_in_module(obj, module):
             continue
@@ -334,7 +213,7 @@ def get_modules(
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
-    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
+    diff: Annotated[Optional[bool], diff_inline_option] = None,
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
@@ -357,7 +236,7 @@ def add(
 @app.command()
 def remove(
     files: Annotated[list[pathlib.Path], file_arg],
-    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
+    diff: Annotated[Optional[bool], diff_inline_option] = None,
 ) -> None:
     """Remove the __repr__ method from all classes in the source code."""
     for module, file_path in get_modules(files):
@@ -390,12 +269,15 @@ def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
 def process_file(file_path: pathlib.Path) -> None:
     """Process a single file and report classes without a __repr__ method."""
     module = load_module(file_path)
-    classes = extract_classes(module, file_path)
+    if module is None:
+        typer.secho(f"Error: Could not load module from {file_path}", fg="red", err=True)
+        return
+    
+    classes = extract_classes(module)
     no_repr_classes = filter_no_repr(classes)
     report_results(file_path, classes, no_repr_classes)
 
-
-def load_module(file_path: pathlib.Path) -> ModuleType | None:
+def load_module(file_path: pathlib.Path) -> Optional[ModuleType]:
     """Load a module from a given file path."""
     try:
         return get_module(file_path)
@@ -403,42 +285,38 @@ def load_module(file_path: pathlib.Path) -> ModuleType | None:
         typer.secho(e.message, fg="red", err=True)
         return None
 
-
-def extract_classes(module: ModuleType, file_path: pathlib.Path) -> list[type]:
+def extract_classes(module: ModuleType) -> List[Type]:
     """Extract classes from a module."""
-    try:
-        return [
-            obj
-            for _, obj in inspect.getmembers(module, inspect.isclass)
-            if is_class_in_module(obj, module)
-        ]
-    except CreprError as e:
-        typer.secho(e.message, fg="red", err=True)
-        return []
+    return [
+        obj for _, obj in inspect.getmembers(module, inspect.isclass)
+        if is_class_in_module(obj, module)
+    ]
 
-
-def filter_no_repr(classes: list[type]) -> list[str]:
+def filter_no_repr(classes: List[Type]) -> List[str]:
     """Filter out classes without a __repr__ method."""
-    return [obj.__name__ for obj in classes if get_repr_source(obj)[1] == -1]
+    return [
+        obj.__name__ for obj in classes
+        if get_repr_source(obj)[1] == -1
+    ]
 
 
-def report_results(
-    file_path: pathlib.Path, classes: list[type], no_repr_classes: list[str],
-) -> None:
+def report_results(file_path: pathlib.Path, classes: List[Type], no_repr_classes: List[str]) -> None:
     """Report the results of classes without a __repr__ method."""
     if no_repr_classes:
         typer.secho(
-            f"In module '{file_path}': {len(no_repr_classes)} class(es) "
-            "don't have a __repr__ method:",
-            fg="yellow",
+            "In module '{}': {} class(es) don't have a __repr__ method:".format(
+                file_path, len(no_repr_classes)
+            ),
+            fg="yellow"
         )
         for class_name in no_repr_classes:
-            typer.echo(f"{file_path}: {class_name}")
+            typer.echo("{}: {}".format(file_path, class_name))
     else:
         typer.secho(
-            f"All {len(classes)} class(es) in module '{file_path}' "
-            "have a __repr__ method.",
-            fg="green",
+            "All {} class(es) in module '{}' have a __repr__ method.".format(
+                len(classes), file_path
+            ),
+            fg="green"
         )
 
 
