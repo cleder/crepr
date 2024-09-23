@@ -12,16 +12,28 @@ import importlib.machinery
 import inspect
 import pathlib
 import uuid
+from collections.abc import Iterable
 from collections.abc import Iterator
 from types import MappingProxyType
 from types import ModuleType
 from typing import Annotated
 from typing import Optional
+from typing import Self
 from typing import TypedDict
 
 import typer
 
 app = typer.Typer(no_args_is_help=True)
+
+
+class CreprError(Exception):
+    """Base class for exceptions in this module."""
+
+    def __init__(self: Self, message: str, exit_code: int = 1) -> None:
+        """Initialize the exception with a message and an optional exit code."""
+        self.message = message
+        self.exit_code = exit_code
+        super().__init__(message)
 
 
 class Change(TypedDict):
@@ -208,14 +220,14 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
         loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
         module = loader.load_module()
     except FileNotFoundError as e:
-        typer.secho(f"Error: File '{file_path}' not found.", fg="red")
-        raise typer.Exit(code=1) from e
+        message = f"Error: File '{file_path}' not found."
+        raise CreprError(message, exit_code=1) from e
     except ImportError as e:
-        typer.secho(f"Error: Could not import '{file_path}'.", fg="red")
-        raise typer.Exit(code=1) from e
+        message = f"Error: Could not import '{file_path}'."
+        raise CreprError(message, exit_code=1) from e
     except SyntaxError as e:
-        typer.secho(f"Error: Could not parse '{file_path}'.", fg="red")
-        raise typer.Exit(code=1) from e
+        message = f"Error: Could not parse '{file_path}'."
+        raise CreprError(message, exit_code=1) from e
     return module
 
 
@@ -279,32 +291,43 @@ def get_all_init_args(
 
 
 def create_repr(
-    file_path: pathlib.Path,
+    module: ModuleType,
     kwarg_splat: str,
-) -> tuple[ModuleType, dict[int, Change]]:
+) -> dict[int, Change]:
     """Create a __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
-    module = get_module(file_path)
     for obj, init_args, lineno, source in get_all_init_args(module):
         new_lines = create_repr_lines(obj.__name__, init_args, kwarg_splat)
         changes[lineno + len(source)] = {
             "lines": new_lines,
             "class_name": obj.__name__,
         }
-    return module, changes
+    return changes
 
 
-def remove_repr(file_path: pathlib.Path) -> tuple[ModuleType, dict[int, Change]]:
+def remove_repr(module: ModuleType) -> dict[int, Change]:
     """Remove the __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
-    module = get_module(file_path)
     for obj, _, _, _ in get_all_init_args(module):
         lines_to_remove, lineno = get_repr_source(obj)
         changes[lineno] = {
             "lines": lines_to_remove.splitlines(),
             "class_name": obj.__name__,
         }
-    return module, changes
+    return changes
+
+
+def get_modules(
+    files: Iterable[pathlib.Path],
+) -> Iterator[tuple[ModuleType, pathlib.Path]]:
+    """Iterate over all files and return the loaded module."""
+    for file_path in files:
+        try:
+            module = get_module(file_path)
+        except CreprError as e:
+            typer.secho(e.message, fg="red", err=True)
+            continue
+        yield module, file_path
 
 
 @app.command()
@@ -314,8 +337,8 @@ def add(
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
 ) -> None:
     """Add __repr__ to all classes in the source code."""
-    for file_path in files:
-        module, changes = create_repr(file_path, kwarg_splat)
+    for module, file_path in get_modules(files):
+        changes = create_repr(module, kwarg_splat)
         if not changes:
             continue
         src = insert_changes(module, changes)
@@ -337,8 +360,8 @@ def remove(
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
 ) -> None:
     """Remove the __repr__ method from all classes in the source code."""
-    for file_path in files:
-        module, changes = remove_repr(file_path)
+    for module, file_path in get_modules(files):
+        changes = remove_repr(module)
         if not changes:
             continue
         src = remove_changes(module, changes)

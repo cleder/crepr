@@ -5,7 +5,6 @@ import pathlib
 import tempfile
 from types import ModuleType
 
-import click
 import pytest
 from typer.testing import CliRunner
 
@@ -30,19 +29,19 @@ def test_get_module() -> None:
 
 def test_get_module_module_not_found() -> None:
     """Exit gracefully if module not found."""
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(crepr.CreprError):
         crepr.get_module("tests/classes/file/not/found")
 
 
 def test_get_module_import_error() -> None:
     """Exit gracefully if module not found."""
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(crepr.CreprError):
         crepr.get_module("tests/classes/import_error.py")
 
 
 def test_get_module_syntax_error() -> None:
     """Exit gracefully if module not found."""
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(crepr.CreprError):
         crepr.get_module("tests/classes/c_test.c")
 
 
