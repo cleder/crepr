@@ -353,6 +353,7 @@ def remove(
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
+
 @app.command()
 def report_missing(files: Annotated[list[pathlib.Path], file_arg]) -> None:
     """Count and print classes without a __repr__ method in the source code."""
@@ -387,7 +388,8 @@ def extract_classes(module, file_path: pathlib.Path):
     """Extract classes from a module."""
     try:
         return [
-            obj for _, obj in inspect.getmembers(module, inspect.isclass)
+            obj
+            for _, obj in inspect.getmembers(module, inspect.isclass)
             if is_class_in_module(obj, module)
         ]
     except AttributeError as e:
@@ -396,19 +398,18 @@ def extract_classes(module, file_path: pathlib.Path):
 
 def filter_no_repr(classes):
     """Filter out classes without a __repr__ method."""
-    return [
-        obj.__name__ for obj in classes
-        if get_repr_source(obj)[1] == -1
-    ]
+    return [obj.__name__ for obj in classes if get_repr_source(obj)[1] == -1]
 
 
-def report_results(file_path: pathlib.Path, classes: list, no_repr_classes: list) -> None:
+def report_results(
+    file_path: pathlib.Path, classes: list, no_repr_classes: list,
+) -> None:
     """Report the results of classes without a __repr__ method."""
     if no_repr_classes:
         typer.secho(
             f"In module '{file_path}': {len(no_repr_classes)} class(es) "
             "don't have a __repr__ method:",
-            fg="yellow"
+            fg="yellow",
         )
         for class_name in no_repr_classes:
             typer.echo(f"{file_path}: {class_name}")
@@ -416,8 +417,9 @@ def report_results(file_path: pathlib.Path, classes: list, no_repr_classes: list
         typer.secho(
             f"All {len(classes)} class(es) in module '{file_path}' "
             "have a __repr__ method.",
-            fg="green"
+            fg="green",
         )
+
 
 if __name__ == "__main__":
     app()
