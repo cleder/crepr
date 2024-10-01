@@ -382,18 +382,17 @@ def report_missing(
     files: Annotated[list[pathlib.Path], file_arg],
 ) -> None:
     """Report classes without __repr__ methods."""
-    for module, file_path in get_modules(files):
-        check_repr_for_objects(module, file_path)
-
-
-def check_repr_for_objects(module, file_path):
-    for obj, _, lineno, _ in get_all_init_args(module):
+    for file_path in files:
         try:
-            repr_source, _ = get_repr_source(obj)
-            if not repr_source:
-                typer.echo(f"{file_path}:{lineno}: {obj.__name__}")
-        except Exception as e:
-            typer.echo(CreprError(str(e)))
+            module = get_module(file_path)
+            report_missing_classes(module, file_path)
+	except CreprError as e:
+            typer.secho(e.message, fg="red", err=True)
+
+def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
+    for obj, _, lineno, _ in get_all_init_args(module):
+        if not hasattr(obj, '__repr__') or obj.__repr__ is object.__repr__:
+            typer.echo(f"{file_path}:{lineno}: {obj.__name__}")            
 
 
 if __name__ == "__main__":
