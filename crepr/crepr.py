@@ -376,6 +376,7 @@ def remove(
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
+
 @app.command()
 def report_missing(
     files: Annotated[list[pathlib.Path], file_arg],
@@ -393,7 +394,6 @@ def check_repr_for_objects(module, file_path):
                 typer.echo(f"{file_path}:{lineno}: {obj.__name__}")
         except Exception as e:
             typer.echo(CreprError(str(e)))
-
 
 
 if __name__ == "__main__":
