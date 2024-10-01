@@ -177,6 +177,7 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
     """
     return inspect.getmodule(cls) == module
 
+
 def repr_exists(cls: type) -> bool:
     """Check if a __repr__ method already exists in the class.
 
@@ -187,6 +188,7 @@ def repr_exists(cls: type) -> bool:
     Returns:
     -------
         bool: True if the __repr__ method exists, False otherwise.
+
     """
     return "__repr__" in cls.__dict__
 
@@ -355,7 +357,7 @@ def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
-    ignore_existing: Annotated[Optional[bool], ignore_existing_option] = None
+    ignore_existing: Annotated[bool | None, ignore_existing_option] = None,
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
@@ -363,7 +365,9 @@ def add(
         if not changes:
             continue
         if existing_repr_found and not ignore_existing:
-            typer.echo(f"Skipping {file_path} as it already contains __repr__ method. Use --ignore-existing to override.")
+            typer.echo(
+                f"Skipping {file_path} as it already contains __repr__ method. Use --ignore-existing to override.",
+            )
             continue
         src = insert_changes(module, changes)
         if diff is None:
