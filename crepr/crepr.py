@@ -49,6 +49,10 @@ diff_inline_option = typer.Option(
     "--diff/--inline",
     help="Display the diff / Apply changes to the file(s)",
 )
+ignore_existing_option = typer.Option(
+    "--ignore-existing",
+    help="Add __repr__ regardless if one exists",
+)
 
 
 def get_method_source(cls: type, method_name: str) -> tuple[str, int]:
@@ -173,6 +177,19 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
     """
     return inspect.getmodule(cls) == module
 
+def repr_exists(cls: type) -> bool:
+    """Check if a __repr__ method already exists in the class.
+
+    Args:
+    ----
+        cls (type): The class to inspect.
+
+    Returns:
+    -------
+        bool: True if the __repr__ method exists, False otherwise.
+    """
+    return "__repr__" in cls.__dict__
+
 
 def create_repr_lines(
     class_name: str,
@@ -293,16 +310,19 @@ def get_all_init_args(
 def create_repr(
     module: ModuleType,
     kwarg_splat: str,
-) -> dict[int, Change]:
+) -> tuple[dict[int, Change], bool]:
     """Create a __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
+    existing_repr_found = False
     for obj, init_args, lineno, source in get_all_init_args(module):
+        if repr_exists(obj):
+            existing_repr_found = True
         new_lines = create_repr_lines(obj.__name__, init_args, kwarg_splat)
         changes[lineno + len(source)] = {
             "lines": new_lines,
             "class_name": obj.__name__,
         }
-    return changes
+    return changes, existing_repr_found
 
 
 def remove_repr(module: ModuleType) -> dict[int, Change]:
@@ -335,11 +355,15 @@ def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
+    ignore_existing: Annotated[Optional[bool], ignore_existing_option] = None
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
-        changes = create_repr(module, kwarg_splat)
+        changes, existing_repr_found = create_repr(module, kwarg_splat)
         if not changes:
+            continue
+        if existing_repr_found and not ignore_existing:
+            typer.echo(f"Skipping {file_path} as it already contains __repr__ method. Use --ignore-existing to override.")
             continue
         src = insert_changes(module, changes)
         if diff is None:
