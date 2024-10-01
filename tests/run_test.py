@@ -354,7 +354,8 @@ def test_add_ignore_existing_true() -> None:
         temp_file_path = pathlib.Path(temp_file.name)
 
     result = runner.invoke(
-        crepr.app, ["add", "--ignore-existing", "--inline", str(temp_file_path)],
+        crepr.app,
+        ["add", "--ignore-existing", "--inline", str(temp_file_path)],
     )
     assert result.exit_code == 0
     assert (
