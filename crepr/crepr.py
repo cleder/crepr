@@ -396,11 +396,13 @@ def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
     Args:
         module (ModuleType): The module to inspect for classes.
         file_path (pathlib.Path): The path of the file associated with the module.
+
     """
     default_repr = object.__repr__
     for obj, _, lineno, _ in get_all_init_args(module):
         if not hasattr(obj, "__repr__") or obj.__repr__ is default_repr:
             typer.echo(f"{file_path}: {lineno}: {obj.__name__}")
+
 
 if __name__ == "__main__":
     app()
