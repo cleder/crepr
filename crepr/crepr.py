@@ -376,6 +376,25 @@ def remove(
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
+@app.command()
+def report_missing(
+    files: Annotated[list[pathlib.Path], file_arg],
+) -> None:
+    """Report classes without __repr__ methods."""
+    for module, file_path in get_modules(files):
+        check_repr_for_objects(module, file_path)
+
+
+def check_repr_for_objects(module, file_path):
+    for obj, _, lineno, _ in get_all_init_args(module):
+        try:
+            repr_source, _ = get_repr_source(obj)
+            if not repr_source:
+                typer.echo(f"{file_path}:{lineno}: {obj.__name__}")
+        except Exception as e:
+            typer.echo(CreprError(str(e)))
+
+
 
 if __name__ == "__main__":
     app()
