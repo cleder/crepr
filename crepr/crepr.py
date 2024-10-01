@@ -392,7 +392,7 @@ def report_missing(
 def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
     for obj, _, lineno, _ in get_all_init_args(module):
         if not hasattr(obj, '__repr__') or obj.__repr__ is object.__repr__:
-            typer.echo(f"{file_path}:{lineno}: {obj.__name__}")            
+            typer.echo(f"{file_path}:{lineno}: {obj.__name__}")
 
 
 if __name__ == "__main__":
