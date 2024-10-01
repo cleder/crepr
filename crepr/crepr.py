@@ -52,6 +52,7 @@ diff_inline_option = typer.Option(
 ignore_existing_option = typer.Option(
     "--ignore-existing",
     help="Add __repr__ regardless if one exists",
+    is_flag=True
 )
 
 
@@ -365,9 +366,13 @@ def add(
         if not changes:
             continue
         if existing_repr_found and not ignore_existing:
+<<<<<<< Updated upstream
             typer.echo(
                 f"Skipping {file_path} as it already contains __repr__ method. Use --ignore-existing to override.",
             )
+=======
+            typer.echo(f"Skipping {file_path}: __repr__ exists. Use --ignore-existing to override.")
+>>>>>>> Stashed changes
             continue
         src = insert_changes(module, changes)
         if diff is None:
