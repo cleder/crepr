@@ -331,7 +331,7 @@ def test_add_ignore_existing_false() -> None:
     result = runner.invoke(crepr.app, ["add", str(temp_file_path)])
     assert result.exit_code == 0
     assert (
-        f"Skipping {temp_file_path} as it already contains __repr__ method."
+        f"Skipping {temp_file_path}: __repr__ exists. Use --ignore-existing to override."
         in result.stdout
     )
     assert "Use --ignore-existing to override." in result.stdout
@@ -359,7 +359,7 @@ def test_add_ignore_existing_true() -> None:
     )
     assert result.exit_code == 0
     assert (
-        f"Skipping {temp_file_path} as it already contains __repr__ method."
+        f"Skipping {temp_file_path}: __repr__ exists. Use --ignore-existing to override."
         not in result.stdout
     )
 
