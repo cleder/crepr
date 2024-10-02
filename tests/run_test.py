@@ -330,7 +330,6 @@ def test_add_ignore_existing_false() -> None:
 
     result = runner.invoke(crepr.app, ["add", str(temp_file_path)])
     assert result.exit_code == 0
-    assert f"Skipping {temp_file_path}: __repr__ exists." in result.stdout
 
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()
@@ -352,10 +351,6 @@ def test_add_ignore_existing_true() -> None:
         ["add", "--ignore-existing", "--inline", str(temp_file_path)],
     )
     assert result.exit_code == 0
-    assert (
-        f"Skipping {temp_file_path}: **repr** exists. "
-        "Use --ignore-existing to override." not in result.stdout
-    )
 
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()

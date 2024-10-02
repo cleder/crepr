@@ -313,19 +313,19 @@ def get_all_init_args(
 def create_repr(
     module: ModuleType,
     kwarg_splat: str,
-) -> tuple[dict[int, Change], bool]:
+    ignore_existing: bool | None = None,
+) -> dict[int, Change]:
     """Create a __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
-    existing_repr_found = False
     for obj, init_args, lineno, source in get_all_init_args(module):
-        if repr_exists(obj):
-            existing_repr_found = True
+        if repr_exists(obj) and not ignore_existing:
+            continue
         new_lines = create_repr_lines(obj.__name__, init_args, kwarg_splat)
         changes[lineno + len(source)] = {
             "lines": new_lines,
             "class_name": obj.__name__,
         }
-    return changes, existing_repr_found
+    return changes
 
 
 def remove_repr(module: ModuleType) -> dict[int, Change]:
@@ -362,14 +362,8 @@ def add(
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
-        changes, existing_repr_found = create_repr(module, kwarg_splat)
+        changes = create_repr(module, kwarg_splat, ignore_existing)
         if not changes:
-            continue
-        if existing_repr_found and not ignore_existing:
-            typer.echo(
-                f"""Skipping {file_path}: __repr__ exists.
-                Use --ignore-existing to override.""",
-            )
             continue
         src = insert_changes(module, changes)
         if diff is None:
