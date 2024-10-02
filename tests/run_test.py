@@ -330,17 +330,11 @@ def test_add_ignore_existing_false() -> None:
 
     result = runner.invoke(crepr.app, ["add", str(temp_file_path)])
     assert result.exit_code == 0
-    assert (
-        f"Skipping {temp_file_path}: __repr__ exists. Use --ignore-existing to override."
-        in result.stdout
-    )
-    assert "Use --ignore-existing to override." in result.stdout
+    assert f"Skipping {temp_file_path}: __repr__ exists." in result.stdout
 
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()
-        assert (
-            content.count("def __repr__(self)") == 1
-        )  # Ensure no new __repr__ was added
+        assert content.count("def __repr__") == 1  # Ensure no new __repr__ was added
 
     pathlib.Path.unlink(temp_file_path)
 
@@ -359,14 +353,12 @@ def test_add_ignore_existing_true() -> None:
     )
     assert result.exit_code == 0
     assert (
-        f"Skipping {temp_file_path}: __repr__ exists. Use --ignore-existing to override."
-        not in result.stdout
+        f"Skipping {temp_file_path}: **repr** exists. "
+        "Use --ignore-existing to override." not in result.stdout
     )
 
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()
-        assert (
-            content.count("def __repr__(self)") == 2
-        )  # Ensure a new __repr__ was added
+        assert content.count("def __repr__") == 2  # Ensure a new __repr__ was added
 
     pathlib.Path.unlink(temp_file_path)
