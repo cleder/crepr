@@ -7,7 +7,7 @@ from typing import Self
 
 
 class MyClassWithRepr:
-    """A class without a `__repr__` method."""
+    """A class with a `__repr__` method."""
 
     def __init__(self: Self, value: str) -> None:
         """Initialize the class with the given value."""
