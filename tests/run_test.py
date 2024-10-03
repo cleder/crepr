@@ -328,13 +328,17 @@ def test_add_ignore_existing_false() -> None:
             temp_file.write(f.read())
         temp_file_path = pathlib.Path(temp_file.name)
 
-    result = runner.invoke(crepr.app, ["add", str(temp_file_path)])
+    result = runner.invoke(crepr.app, ["add", "--inline", str(temp_file_path)])
     assert result.exit_code == 0
 
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()
-        assert content.count("def __repr__") == 1  # Ensure no new __repr__ was added
-
+        # Ensure a new __repr__ was added
+        assert content.count("def __repr__") == 3
+        # Ensure original __repr__ is still there
+        assert "Existing repr magic method of the class" in content
+        # Ensure new __repr__ was added
+        assert "Create a string (c)representation for ExistingRepr" in content
     pathlib.Path.unlink(temp_file_path)
 
 
@@ -354,6 +358,11 @@ def test_add_ignore_existing_true() -> None:
 
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()
-        assert content.count("def __repr__") == 2  # Ensure a new __repr__ was added
+        # Ensure no new __repr__ was added
+        assert content.count("def __repr__") == 2
+        # Ensure original __repr__ is intact
+        assert "Existing repr magic method of the class" in content
+        # Ensure new __repr__ was not added
+        assert "Create a string (c)representation for ExistingRepr" not in content
 
     pathlib.Path.unlink(temp_file_path)

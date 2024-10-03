@@ -313,12 +313,12 @@ def get_all_init_args(
 def create_repr(
     module: ModuleType,
     kwarg_splat: str,
-    ignore_existing: bool | None = None,
+    ignore_existing: bool = False,  # noqa: FBT001 FBT002
 ) -> dict[int, Change]:
     """Create a __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
     for obj, init_args, lineno, source in get_all_init_args(module):
-        if repr_exists(obj) and not ignore_existing:
+        if repr_exists(obj) and ignore_existing:
             continue
         new_lines = create_repr_lines(obj.__name__, init_args, kwarg_splat)
         changes[lineno + len(source)] = {
@@ -358,7 +358,7 @@ def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
-    ignore_existing: Annotated[bool | None, ignore_existing_option] = None,
+    ignore_existing: Annotated[bool, ignore_existing_option] = False,  # noqa: FBT002
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
