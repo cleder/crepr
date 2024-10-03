@@ -382,12 +382,8 @@ def report_missing(
     files: Annotated[list[pathlib.Path], file_arg],
 ) -> None:
     """Report classes without __repr__ methods."""
-    for file_path in files:
-        try:
-            module = get_module(file_path)
-            report_missing_classes(module, file_path)
-        except CreprError as e:
-            typer.secho(e.message, fg="red", err=True)
+    for module, file_path in get_modules(files):
+        report_missing_classes(module, file_path)
 
 
 def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
