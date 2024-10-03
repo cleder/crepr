@@ -286,3 +286,35 @@ def test_show_remove_no_repr() -> None:
     assert result.exit_code == 0
     assert "__repr__" not in result.stdout
     assert len(result.stdout.splitlines()) == 0
+
+
+def test_report_missing() -> None:
+    """Test report_missing command for classes without __repr__."""
+    result = runner.invoke(
+        crepr.app,
+        ["report-missing", "tests/classes/class_without_repr.py"],
+    )
+    assert result.exit_code == 0
+    assert "class_without_repr.py" in result.stdout
+    assert "MyClassWithoutRepr" in result.stdout
+
+
+def test_report_missing_error() -> None:
+    """Test report_missing command when a file throws an import error."""
+    file_path = "tests/classes/module_error.py"
+    result = runner.invoke(crepr.app, ["report-missing", file_path])
+
+    if result.exit_code != 0:
+        raise (crepr.CreprError(result.output))
+
+
+def test_report_missing_with_repr() -> None:
+    """Test report_missing command for a class with a __repr__ method."""
+    file_path = "tests/classes/class_with_repr_test.py"
+
+    result = runner.invoke(crepr.app, ["report-missing", file_path])
+
+    assert result.exit_code == 0, f"Unexpected exit code: {result.exit_code}"
+    lines = result.stdout.splitlines()
+
+    assert len(lines) == 0, "Expected 1 lines of output, but got many"
