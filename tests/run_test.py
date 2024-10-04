@@ -276,7 +276,7 @@ def test_show_remove() -> None:
     result = runner.invoke(crepr.app, ["remove", "tests/remove/kw_only_test.py"])
 
     assert result.exit_code == 0
-    assert "__repr__ removed from class: KwOnly" in result.stdout
+    assert "__repr__ removed for class: KwOnly" in result.stdout
     assert len(result.stdout.splitlines()) == 10
 
 
@@ -390,7 +390,7 @@ def test_remove_show_only_changes() -> None:
     result = runner.invoke(crepr.app, ["remove", "tests/remove/kw_only_test.py"])
 
     assert result.exit_code == 0
-    assert "__repr__ removed from class: KwOnly" in result.stdout
+    assert "__repr__ removed for class: KwOnly" in result.stdout
     assert "def __repr__(self: Self) -> str:" in result.stdout
     assert '"""Create a string (c)representation for KwOnly."""' in result.stdout
     assert "return (" in result.stdout
