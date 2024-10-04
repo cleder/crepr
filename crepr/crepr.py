@@ -365,15 +365,19 @@ def add(
         changes = create_repr(module, kwarg_splat, ignore_existing)
         if not changes:
             continue
-        src = insert_changes(module, changes)
+
         if diff is None:
-            typer.echo("\n".join(src))
+            for change in changes.values():
+                typer.echo(f"__repr__ generated for class: {change['class_name']}")
+                typer.echo("\n".join(change["lines"]))
+                typer.echo("")
         elif diff:
             before = inspect.getsource(module).splitlines()
+            src = insert_changes(module, changes)
             _diff = difflib.unified_diff(before, src, lineterm="")
             typer.echo("\n".join(_diff))
-            continue
         else:
+            src = insert_changes(module, changes)
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
@@ -388,15 +392,19 @@ def remove(
         changes = remove_repr(module)
         if not changes:
             continue
-        src = remove_changes(module, changes)
+
         if diff is None:
-            typer.echo("\n".join(src))
+            for change in changes.values():
+                typer.echo(f"__repr__ removed from class: {change['class_name']}")
+                typer.echo("\n".join(change["lines"]))
+                typer.echo("")
         elif diff:
             before = inspect.getsource(module).splitlines()
+            src = remove_changes(module, changes)
             _diff = difflib.unified_diff(before, src, lineterm="")
             typer.echo("\n".join(_diff))
-            continue
         else:
+            src = remove_changes(module, changes)
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 

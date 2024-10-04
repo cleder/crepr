@@ -188,8 +188,9 @@ def test_show() -> None:
     result = runner.invoke(crepr.app, ["add", "tests/classes/kw_only_test.py"])
 
     assert result.exit_code == 0
+    assert "__repr__ generated for class: KwOnly" in result.stdout
     assert "Create a string (c)representation for KwOnly" in result.stdout
-    assert len(result.stdout.splitlines()) == 20
+    assert len(result.stdout.splitlines()) == 10
 
 
 def test_show_no_init() -> None:
@@ -275,8 +276,8 @@ def test_show_remove() -> None:
     result = runner.invoke(crepr.app, ["remove", "tests/remove/kw_only_test.py"])
 
     assert result.exit_code == 0
-    assert "__repr__" not in result.stdout
-    assert len(result.stdout.splitlines()) == 13
+    assert "__repr__ removed from class: KwOnly" in result.stdout
+    assert len(result.stdout.splitlines()) == 10
 
 
 def test_show_remove_no_repr() -> None:
@@ -366,3 +367,35 @@ def test_add_ignore_existing_true() -> None:
         assert "Create a string (c)representation for ExistingRepr" not in content
 
     pathlib.Path.unlink(temp_file_path)
+
+
+def test_add_show_only_changes() -> None:
+    """Test that only proposed changes are shown without --diff or --inline."""
+    result = runner.invoke(crepr.app, ["add", "tests/classes/kw_only_test.py"])
+
+    assert result.exit_code == 0
+    assert "__repr__ generated for class: KwOnly" in result.stdout
+    assert "def __repr__(self) -> str:" in result.stdout
+    assert (
+        "return (f'{self.__class__.__module__}.{self.__class__.__name__}("
+        in result.stdout
+    )
+    assert "f'name={self.name!r}, '" in result.stdout
+    assert "f'age={self.age!r}, '" in result.stdout
+    assert "')')" in result.stdout
+
+
+def test_remove_show_only_changes() -> None:
+    """Test that only proposed removals are shown without --diff or --inline."""
+    result = runner.invoke(crepr.app, ["remove", "tests/remove/kw_only_test.py"])
+
+    assert result.exit_code == 0
+    assert "__repr__ removed from class: KwOnly" in result.stdout
+    assert "def __repr__(self: Self) -> str:" in result.stdout
+    assert '"""Create a string (c)representation for KwOnly."""' in result.stdout
+    assert "return (" in result.stdout
+    assert 'f"{self.__class__.__module__}.{self.__class__.__name__}("' in result.stdout
+    assert 'f"name={self.name!r}, "' in result.stdout
+    assert 'f"age={self.age!r}, "' in result.stdout
+    assert '")"\n' in result.stdout
+    assert ")" in result.stdout
