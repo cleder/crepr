@@ -318,3 +318,51 @@ def test_report_missing_with_repr() -> None:
     lines = result.stdout.splitlines()
 
     assert len(lines) == 0, "Expected 1 lines of output, but got many"
+
+
+def test_add_ignore_existing_false() -> None:
+    """Test add command when ignore_existing is False and __repr__ exists."""
+    file_name = pathlib.Path("tests/classes/existing_repr_test.py")
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+        with pathlib.Path.open(file_name, mode="rt", encoding="UTF-8") as f:
+            temp_file.write(f.read())
+        temp_file_path = pathlib.Path(temp_file.name)
+
+    result = runner.invoke(crepr.app, ["add", "--inline", str(temp_file_path)])
+    assert result.exit_code == 0
+
+    with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
+        content = f.read()
+        # Ensure a new __repr__ was added
+        assert content.count("def __repr__") == 3
+        # Ensure original __repr__ is still there
+        assert "Existing repr magic method of the class" in content
+        # Ensure new __repr__ was added
+        assert "Create a string (c)representation for ExistingRepr" in content
+    pathlib.Path.unlink(temp_file_path)
+
+
+def test_add_ignore_existing_true() -> None:
+    """Test add command when ignore_existing is True and __repr__ exists."""
+    file_name = pathlib.Path("tests/classes/existing_repr_test.py")
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+        with pathlib.Path.open(file_name, mode="rt", encoding="UTF-8") as f:
+            temp_file.write(f.read())
+        temp_file_path = pathlib.Path(temp_file.name)
+
+    result = runner.invoke(
+        crepr.app,
+        ["add", "--ignore-existing", "--inline", str(temp_file_path)],
+    )
+    assert result.exit_code == 0
+
+    with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
+        content = f.read()
+        # Ensure no new __repr__ was added
+        assert content.count("def __repr__") == 2
+        # Ensure original __repr__ is intact
+        assert "Existing repr magic method of the class" in content
+        # Ensure new __repr__ was not added
+        assert "Create a string (c)representation for ExistingRepr" not in content
+
+    pathlib.Path.unlink(temp_file_path)
