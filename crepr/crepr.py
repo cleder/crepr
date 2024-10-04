@@ -12,6 +12,7 @@ import importlib.machinery
 import inspect
 import pathlib
 import uuid
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
 from types import MappingProxyType
@@ -20,7 +21,6 @@ from typing import Annotated
 from typing import Optional
 from typing import Self
 from typing import TypedDict
-from typing import Callable
 
 import typer
 
