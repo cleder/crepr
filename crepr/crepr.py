@@ -366,8 +366,8 @@ def apply_changes(
     module: ModuleType,
     changes: dict[int, Change],
     file_path: pathlib.Path,
-    diff: bool,  # noqa: FBT001 FBT002
-    change_func: Callable[[ModuleType, dict[int, Change]], list[str]]
+    diff: bool,  # noqa: FBT001
+    change_func: Callable[[ModuleType, dict[int, Change]], list[str]],
 ) -> None:
     """Apply changes to the module and handle diff or file writing."""
     src = change_func(module, changes)
@@ -396,7 +396,9 @@ def add(
         if diff is None:
             print_changes(changes, "generated")
         else:
-            apply_changes(module, changes, file_path, diff, insert_changes)
+            apply_changes(
+                module, changes, file_path, diff=diff, change_func=insert_changes
+            )
 
 
 @app.command()
@@ -413,7 +415,9 @@ def remove(
         if diff is None:
             print_changes(changes, "removed")
         else:
-            apply_changes(module, changes, file_path, diff, remove_changes)
+            apply_changes(
+                module, changes, file_path, diff=diff, change_func=remove_changes
+            )
 
 
 @app.command()
