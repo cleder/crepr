@@ -12,6 +12,7 @@ import importlib.machinery
 import inspect
 import pathlib
 import uuid
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
 from types import MappingProxyType
@@ -20,7 +21,6 @@ from typing import Annotated
 from typing import Optional
 from typing import Self
 from typing import TypedDict
-from typing import Callable
 
 import typer
 
@@ -366,8 +366,8 @@ def apply_changes(
     module: ModuleType,
     changes: dict[int, Change],
     file_path: pathlib.Path,
-    diff: bool,
-    change_func: Callable,
+    diff: bool,  # noqa: FBT001 FBT002
+    change_func: Callable[[ModuleType, dict[int, Change]], list[str]]
 ) -> None:
     """Apply changes to the module and handle diff or file writing."""
     src = change_func(module, changes)
