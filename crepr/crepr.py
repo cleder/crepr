@@ -397,7 +397,7 @@ def add(
             print_changes(changes, "generated")
         else:
             apply_changes(
-                module, changes, file_path, diff=diff, change_func=insert_changes
+                module, changes, file_path, diff=diff, change_func=insert_changes,
             )
 
 
@@ -416,7 +416,7 @@ def remove(
             print_changes(changes, "removed")
         else:
             apply_changes(
-                module, changes, file_path, diff=diff, change_func=remove_changes
+                module, changes, file_path, diff=diff, change_func=remove_changes,
             )
 
 
