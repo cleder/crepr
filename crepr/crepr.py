@@ -366,6 +366,8 @@ def add(
         if not changes:
             continue
 
+        src = insert_changes(module, changes) if diff is not None else None
+
         if diff is None:
             for change in changes.values():
                 typer.echo(f"__repr__ generated for class: {change['class_name']}")
@@ -373,11 +375,9 @@ def add(
                 typer.echo("")
         elif diff:
             before = inspect.getsource(module).splitlines()
-            src = insert_changes(module, changes)
             _diff = difflib.unified_diff(before, src, lineterm="")
             typer.echo("\n".join(_diff))
         else:
-            src = insert_changes(module, changes)
             with file_path.open(mode="w", encoding="UTF-8") as f:
                 f.write("\n".join(src))
 
@@ -393,6 +393,8 @@ def remove(
         if not changes:
             continue
 
+        src = remove_changes(module, changes) if diff is not None else None
+
         if diff is None:
             for change in changes.values():
                 typer.echo(f"__repr__ removed from class: {change['class_name']}")
@@ -400,7 +402,6 @@ def remove(
                 typer.echo("")
         elif diff:
             before = inspect.getsource(module).splitlines()
-            src = remove_changes(module, changes)
             _diff = difflib.unified_diff(before, src, lineterm="")
             typer.echo("\n".join(_diff))
         else:
