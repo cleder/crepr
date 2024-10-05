@@ -314,7 +314,7 @@ def get_all_init_args(
 def create_repr(
     module: ModuleType,
     kwarg_splat: str,
-    ignore_existing: bool = False,  # noqa: FBT001 FBT002
+    ignore_existing: bool,  # noqa: FBT001
 ) -> dict[int, Change]:
     """Create a __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
@@ -391,6 +391,21 @@ def apply_changes(
             f.write("\n".join(src))
 
 
+def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
+    """Report classes missing a __repr__ method in the specified module.
+
+    Args:
+    ----
+        module (ModuleType): The module to inspect for classes.
+        file_path (pathlib.Path): File path for the class.
+
+    """
+    for obj, _, lineno, _ in get_all_init_args(module):
+        repr_method = inspect.getattr_static(obj, "__repr__", None)
+        if repr_method is None or repr_method is object.__repr__:
+            typer.echo(f"{file_path}: {lineno}: {obj.__name__}")
+
+
 @app.command()
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
@@ -400,7 +415,7 @@ def add(
 ) -> None:
     """Add __repr__ to all classes in the source code."""
     for module, file_path in get_modules(files):
-        changes = create_repr(module, kwarg_splat, ignore_existing)
+        changes = create_repr(module, kwarg_splat, not ignore_existing)
         if not changes:
             continue
 
@@ -446,20 +461,6 @@ def report_missing(
     """Report classes without __repr__ methods."""
     for module, file_path in get_modules(files):
         report_missing_classes(module, file_path)
-
-
-def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
-    """Report classes missing a __repr__ method in the specified module.
-
-    Args:
-        module (ModuleType): The module to inspect for classes.
-        file_path (pathlib.Path): File path for the class.
-
-    """
-    for obj, _, lineno, _ in get_all_init_args(module):
-        repr_method = inspect.getattr_static(obj, "__repr__", None)
-        if repr_method is None or repr_method is object.__repr__:
-            typer.echo(f"{file_path}: {lineno}: {obj.__name__}")
 
 
 if __name__ == "__main__":
