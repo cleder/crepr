@@ -362,6 +362,18 @@ def print_changes(changes: dict[int, Change], action: str) -> None:
         typer.echo("")
 
 
+def print_diff(before: list[str], after: list[str]) -> None:
+    """Print the diff between two sets of lines."""
+    _diff = difflib.unified_diff(before, after, lineterm="")
+    for line in _diff:
+        color = None
+        if line.startswith("-"):
+            color = "red"
+        if line.startswith("+"):
+            color = "green"
+        typer.secho(line, fg=color, err=True)
+
+
 def apply_changes(
     module: ModuleType,
     changes: dict[int, Change],
@@ -373,8 +385,7 @@ def apply_changes(
     src = change_func(module, changes)
     if diff:
         before = inspect.getsource(module).splitlines()
-        _diff = difflib.unified_diff(before, src, lineterm="")
-        typer.echo("\n".join(_diff))
+        print_diff(before, src)
     else:
         with file_path.open(mode="w", encoding="UTF-8") as f:
             f.write("\n".join(src))
