@@ -12,6 +12,7 @@ import importlib.machinery
 import inspect
 import pathlib
 import uuid
+from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
 from types import MappingProxyType
@@ -353,6 +354,32 @@ def get_modules(
         yield module, file_path
 
 
+def print_changes(changes: dict[int, Change], action: str) -> None:
+    """Print changes for each class."""
+    for change in changes.values():
+        typer.echo(f"__repr__ {action} for class: {change['class_name']}")
+        typer.echo("\n".join(change["lines"]))
+        typer.echo("")
+
+
+def apply_changes(
+    module: ModuleType,
+    changes: dict[int, Change],
+    file_path: pathlib.Path,
+    diff: bool,  # noqa: FBT001
+    change_func: Callable[[ModuleType, dict[int, Change]], list[str]],
+) -> None:
+    """Apply changes to the module and handle diff or file writing."""
+    src = change_func(module, changes)
+    if diff:
+        before = inspect.getsource(module).splitlines()
+        _diff = difflib.unified_diff(before, src, lineterm="")
+        typer.echo("\n".join(_diff))
+    else:
+        with file_path.open(mode="w", encoding="UTF-8") as f:
+            f.write("\n".join(src))
+
+
 @app.command()
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
@@ -365,17 +392,17 @@ def add(
         changes = create_repr(module, kwarg_splat, ignore_existing)
         if not changes:
             continue
-        src = insert_changes(module, changes)
+
         if diff is None:
-            typer.echo("\n".join(src))
-        elif diff:
-            before = inspect.getsource(module).splitlines()
-            _diff = difflib.unified_diff(before, src, lineterm="")
-            typer.echo("\n".join(_diff))
-            continue
+            print_changes(changes, "generated")
         else:
-            with file_path.open(mode="w", encoding="UTF-8") as f:
-                f.write("\n".join(src))
+            apply_changes(
+                module,
+                changes,
+                file_path,
+                diff=diff,
+                change_func=insert_changes,
+            )
 
 
 @app.command()
@@ -388,17 +415,17 @@ def remove(
         changes = remove_repr(module)
         if not changes:
             continue
-        src = remove_changes(module, changes)
+
         if diff is None:
-            typer.echo("\n".join(src))
-        elif diff:
-            before = inspect.getsource(module).splitlines()
-            _diff = difflib.unified_diff(before, src, lineterm="")
-            typer.echo("\n".join(_diff))
-            continue
+            print_changes(changes, "removed")
         else:
-            with file_path.open(mode="w", encoding="UTF-8") as f:
-                f.write("\n".join(src))
+            apply_changes(
+                module,
+                changes,
+                file_path,
+                diff=diff,
+                change_func=remove_changes,
+            )
 
 
 @app.command()
