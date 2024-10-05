@@ -194,6 +194,7 @@ def test_get_modules() -> None:
         pathlib.Path("tests/classes/import_error.py"),
         pathlib.Path("tests/classes/c_test.c"),
         pathlib.Path("tests/classes/file/not/found"),
+        pathlib.Path("tests/classes"),
     ]
     mod_path = list(crepr.get_modules(paths))
     assert len(mod_path) == 5

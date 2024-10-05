@@ -249,6 +249,9 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
     except SyntaxError as e:
         message = f"Error: Could not parse '{file_path}'."
         raise CreprError(message, exit_code=1) from e
+    except IsADirectoryError as e:
+        message = f"Error: '{file_path}' is a directory."
+        raise CreprError(message, exit_code=1) from e
     return module
 
 
