@@ -391,21 +391,6 @@ def apply_changes(
             f.write("\n".join(src))
 
 
-def report_missing_classes(module: ModuleType, file_path: pathlib.Path) -> None:
-    """Report classes missing a __repr__ method in the specified module.
-
-    Args:
-    ----
-        module (ModuleType): The module to inspect for classes.
-        file_path (pathlib.Path): File path for the class.
-
-    """
-    for obj, _, lineno, _ in get_all_init_args(module):
-        repr_method = inspect.getattr_static(obj, "__repr__", None)
-        if repr_method is None or repr_method is object.__repr__:
-            typer.echo(f"{file_path}: {lineno}: {obj.__name__}")
-
-
 @app.command()
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
@@ -452,15 +437,6 @@ def remove(
                 diff=diff,
                 change_func=remove_changes,
             )
-
-
-@app.command()
-def report_missing(
-    files: Annotated[list[pathlib.Path], file_arg],
-) -> None:
-    """Report classes without __repr__ methods."""
-    for module, file_path in get_modules(files):
-        report_missing_classes(module, file_path)
 
 
 if __name__ == "__main__":
