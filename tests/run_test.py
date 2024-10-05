@@ -305,8 +305,7 @@ def test_report_missing_error() -> None:
     file_path = "tests/classes/module_error.py"
     result = runner.invoke(crepr.app, ["report-missing", file_path])
 
-    if result.exit_code != 0:
-        raise (crepr.CreprError(result.output))
+    assert result.exit_code == 0
 
 
 def test_report_missing_with_repr() -> None:
