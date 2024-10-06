@@ -5,7 +5,6 @@ import pathlib
 import tempfile
 from types import ModuleType
 
-import click
 import pytest
 from typer.testing import CliRunner
 
@@ -30,19 +29,19 @@ def test_get_module() -> None:
 
 def test_get_module_module_not_found() -> None:
     """Exit gracefully if module not found."""
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(crepr.CreprError):
         crepr.get_module("tests/classes/file/not/found")
 
 
 def test_get_module_import_error() -> None:
     """Exit gracefully if module not found."""
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(crepr.CreprError):
         crepr.get_module("tests/classes/import_error.py")
 
 
 def test_get_module_syntax_error() -> None:
     """Exit gracefully if module not found."""
-    with pytest.raises(click.exceptions.Exit):
+    with pytest.raises(crepr.CreprError):
         crepr.get_module("tests/classes/c_test.c")
 
 
@@ -184,13 +183,32 @@ def test_create_repr_lines_no_init() -> None:
     assert lines == []
 
 
+def test_get_modules() -> None:
+    """Test get_modules."""
+    paths = [
+        pathlib.Path("tests/classes/kw_only_test.py"),
+        pathlib.Path("tests/remove/splat_kwargs_test.py"),
+        pathlib.Path("tests/remove/splat_kwargs_test.py"),
+        pathlib.Path("tests/classes/dataclass_test.py"),
+        pathlib.Path("tests/classes/class_no_init_test.py"),
+        pathlib.Path("tests/classes/import_error.py"),
+        pathlib.Path("tests/classes/c_test.c"),
+        pathlib.Path("tests/classes/file/not/found"),
+        pathlib.Path("tests/classes"),
+    ]
+    mod_path = list(crepr.get_modules(paths))
+    assert len(mod_path) == 5
+    assert all(isinstance(mp[0], ModuleType) for mp in mod_path)
+
+
 def test_show() -> None:
     """Test the app happy path."""
     result = runner.invoke(crepr.app, ["add", "tests/classes/kw_only_test.py"])
 
     assert result.exit_code == 0
+    assert "__repr__ generated for class: KwOnly" in result.stdout
     assert "Create a string (c)representation for KwOnly" in result.stdout
-    assert len(result.stdout.splitlines()) == 20
+    assert len(result.stdout.splitlines()) == 10
 
 
 def test_show_no_init() -> None:
@@ -276,8 +294,8 @@ def test_show_remove() -> None:
     result = runner.invoke(crepr.app, ["remove", "tests/remove/kw_only_test.py"])
 
     assert result.exit_code == 0
-    assert "__repr__" not in result.stdout
-    assert len(result.stdout.splitlines()) == 13
+    assert "__repr__ removed for class: KwOnly" in result.stdout
+    assert len(result.stdout.splitlines()) == 10
 
 
 def test_show_remove_no_repr() -> None:
@@ -287,3 +305,83 @@ def test_show_remove_no_repr() -> None:
     assert result.exit_code == 0
     assert "__repr__" not in result.stdout
     assert len(result.stdout.splitlines()) == 0
+
+
+def test_add_ignore_existing_false() -> None:
+    """Test add command when ignore_existing is False and __repr__ exists."""
+    file_name = pathlib.Path("tests/classes/existing_repr_test.py")
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+        with pathlib.Path.open(file_name, mode="rt", encoding="UTF-8") as f:
+            temp_file.write(f.read())
+        temp_file_path = pathlib.Path(temp_file.name)
+
+    result = runner.invoke(crepr.app, ["add", "--inline", str(temp_file_path)])
+    assert result.exit_code == 0
+
+    with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
+        content = f.read()
+        # Ensure a new __repr__ was added
+        assert content.count("def __repr__") == 2
+        # Ensure original __repr__ is still there
+        assert "Existing repr magic method of the class" in content
+        # Ensure new __repr__ was added
+        assert "Create a string (c)representation for ExistingRepr" not in content
+    pathlib.Path.unlink(temp_file_path)
+
+
+def test_add_ignore_existing_true() -> None:
+    """Test add command when ignore_existing is True and __repr__ exists."""
+    file_name = pathlib.Path("tests/classes/existing_repr_test.py")
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+        with pathlib.Path.open(file_name, mode="rt", encoding="UTF-8") as f:
+            temp_file.write(f.read())
+        temp_file_path = pathlib.Path(temp_file.name)
+
+    result = runner.invoke(
+        crepr.app,
+        ["add", "--ignore-existing", "--inline", str(temp_file_path)],
+    )
+    assert result.exit_code == 0
+
+    with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
+        content = f.read()
+        # Ensure no new __repr__ was added
+        assert content.count("def __repr__") == 3
+        # Ensure original __repr__ is intact
+        assert "Existing repr magic method of the class" in content
+        # Ensure new __repr__ was not added
+        assert "Create a string (c)representation for ExistingRepr" in content
+
+    pathlib.Path.unlink(temp_file_path)
+
+
+def test_add_show_only_changes() -> None:
+    """Test that only proposed changes are shown without --diff or --inline."""
+    result = runner.invoke(crepr.app, ["add", "tests/classes/kw_only_test.py"])
+
+    assert result.exit_code == 0
+    assert "__repr__ generated for class: KwOnly" in result.stdout
+    assert "def __repr__(self) -> str:" in result.stdout
+    assert (
+        "return (f'{self.__class__.__module__}.{self.__class__.__name__}("
+        in result.stdout
+    )
+    assert "f'name={self.name!r}, '" in result.stdout
+    assert "f'age={self.age!r}, '" in result.stdout
+    assert "')')" in result.stdout
+
+
+def test_remove_show_only_changes() -> None:
+    """Test that only proposed removals are shown without --diff or --inline."""
+    result = runner.invoke(crepr.app, ["remove", "tests/remove/kw_only_test.py"])
+
+    assert result.exit_code == 0
+    assert "__repr__ removed for class: KwOnly" in result.stdout
+    assert "def __repr__(self: Self) -> str:" in result.stdout
+    assert '"""Create a string (c)representation for KwOnly."""' in result.stdout
+    assert "return (" in result.stdout
+    assert 'f"{self.__class__.__module__}.{self.__class__.__name__}("' in result.stdout
+    assert 'f"name={self.name!r}, "' in result.stdout
+    assert 'f"age={self.age!r}, "' in result.stdout
+    assert '")"\n' in result.stdout
+    assert ")" in result.stdout

@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12', '3.13-dev']
+        python-version: ['3.12', '3.13-dev', 3.14-dev]
 
     steps:
       - uses: actions/checkout@v4
@@ -68,6 +68,9 @@ jobs:
     needs: [cpython, static-tests]
     name: Build and publish to PyPI and TestPyPI
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.12
@@ -89,13 +92,11 @@ jobs:
           --outdir dist/
       - name: Publish distribution 📦 to Test PyPI for tags
         if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
       - name: Publish distribution 📦 to PyPI for push to main
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+
 ...

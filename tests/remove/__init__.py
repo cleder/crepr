@@ -1,1 +1,1 @@
-"""Make this a package."""
+"""Classes to test the remove command."""

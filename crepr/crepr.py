@@ -12,16 +12,29 @@ import importlib.machinery
 import inspect
 import pathlib
 import uuid
+from collections.abc import Callable
+from collections.abc import Iterable
 from collections.abc import Iterator
 from types import MappingProxyType
 from types import ModuleType
 from typing import Annotated
 from typing import Optional
+from typing import Self
 from typing import TypedDict
 
 import typer
 
 app = typer.Typer(no_args_is_help=True)
+
+
+class CreprError(Exception):
+    """Base class for exceptions in this module."""
+
+    def __init__(self: Self, message: str, exit_code: int = 1) -> None:
+        """Initialize the exception with a message and an optional exit code."""
+        self.message = message
+        self.exit_code = exit_code
+        super().__init__(message)
 
 
 class Change(TypedDict):
@@ -36,6 +49,11 @@ splat_option = typer.Option(help="The **kwarg splat")
 diff_inline_option = typer.Option(
     "--diff/--inline",
     help="Display the diff / Apply changes to the file(s)",
+)
+ignore_existing_option = typer.Option(
+    "--ignore-existing",
+    help="Add __repr__ regardless if one exists",
+    is_flag=True,
 )
 
 
@@ -162,6 +180,21 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
     return inspect.getmodule(cls) == module
 
 
+def repr_exists(cls: type) -> bool:
+    """Check if a __repr__ method already exists in the class.
+
+    Args:
+    ----
+        cls (type): The class to inspect.
+
+    Returns:
+    -------
+        bool: True if the __repr__ method exists, False otherwise.
+
+    """
+    return "__repr__" in cls.__dict__
+
+
 def create_repr_lines(
     class_name: str,
     init_args: MappingProxyType[str, inspect.Parameter],
@@ -208,14 +241,17 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
         loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
         module = loader.load_module()
     except FileNotFoundError as e:
-        typer.secho(f"Error: File '{file_path}' not found.", fg="red")
-        raise typer.Exit(code=1) from e
+        message = f"Error: File '{file_path}' not found."
+        raise CreprError(message, exit_code=1) from e
     except ImportError as e:
-        typer.secho(f"Error: Could not import '{file_path}'.", fg="red")
-        raise typer.Exit(code=1) from e
+        message = f"Error: Could not import '{file_path}'."
+        raise CreprError(message, exit_code=1) from e
     except SyntaxError as e:
-        typer.secho(f"Error: Could not parse '{file_path}'.", fg="red")
-        raise typer.Exit(code=1) from e
+        message = f"Error: Could not parse '{file_path}'."
+        raise CreprError(message, exit_code=1) from e
+    except IsADirectoryError as e:
+        message = f"Error: '{file_path}' is a directory."
+        raise CreprError(message, exit_code=1) from e
     return module
 
 
@@ -279,32 +315,83 @@ def get_all_init_args(
 
 
 def create_repr(
-    file_path: pathlib.Path,
+    module: ModuleType,
     kwarg_splat: str,
-) -> tuple[ModuleType, dict[int, Change]]:
+    ignore_existing: bool,  # noqa: FBT001
+) -> dict[int, Change]:
     """Create a __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
-    module = get_module(file_path)
     for obj, init_args, lineno, source in get_all_init_args(module):
+        if repr_exists(obj) and ignore_existing:
+            continue
         new_lines = create_repr_lines(obj.__name__, init_args, kwarg_splat)
         changes[lineno + len(source)] = {
             "lines": new_lines,
             "class_name": obj.__name__,
         }
-    return module, changes
+    return changes
 
 
-def remove_repr(file_path: pathlib.Path) -> tuple[ModuleType, dict[int, Change]]:
+def remove_repr(module: ModuleType) -> dict[int, Change]:
     """Remove the __repr__ method for each class of a python file."""
     changes: dict[int, Change] = {}
-    module = get_module(file_path)
     for obj, _, _, _ in get_all_init_args(module):
         lines_to_remove, lineno = get_repr_source(obj)
         changes[lineno] = {
             "lines": lines_to_remove.splitlines(),
             "class_name": obj.__name__,
         }
-    return module, changes
+    return changes
+
+
+def get_modules(
+    files: Iterable[pathlib.Path],
+) -> Iterator[tuple[ModuleType, pathlib.Path]]:
+    """Iterate over all files and return the loaded module."""
+    for file_path in files:
+        try:
+            module = get_module(file_path)
+        except CreprError as e:
+            typer.secho(e.message, fg="red", err=True)
+            continue
+        yield module, file_path
+
+
+def print_changes(changes: dict[int, Change], action: str) -> None:
+    """Print changes for each class."""
+    for change in changes.values():
+        typer.echo(f"__repr__ {action} for class: {change['class_name']}")
+        typer.echo("\n".join(change["lines"]))
+        typer.echo("")
+
+
+def print_diff(before: list[str], after: list[str]) -> None:
+    """Print the diff between two sets of lines."""
+    _diff = difflib.unified_diff(before, after, lineterm="")
+    for line in _diff:
+        color = None
+        if line.startswith("-"):
+            color = "red"
+        if line.startswith("+"):
+            color = "green"
+        typer.secho(line, fg=color, err=True)
+
+
+def apply_changes(
+    module: ModuleType,
+    changes: dict[int, Change],
+    file_path: pathlib.Path,
+    diff: bool,  # noqa: FBT001
+    change_func: Callable[[ModuleType, dict[int, Change]], list[str]],
+) -> None:
+    """Apply changes to the module and handle diff or file writing."""
+    src = change_func(module, changes)
+    if diff:
+        before = inspect.getsource(module).splitlines()
+        print_diff(before, src)
+    else:
+        with file_path.open(mode="w", encoding="UTF-8") as f:
+            f.write("\n".join(src))
 
 
 @app.command()
@@ -312,23 +399,24 @@ def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
+    ignore_existing: Annotated[bool, ignore_existing_option] = False,  # noqa: FBT002
 ) -> None:
     """Add __repr__ to all classes in the source code."""
-    for file_path in files:
-        module, changes = create_repr(file_path, kwarg_splat)
+    for module, file_path in get_modules(files):
+        changes = create_repr(module, kwarg_splat, not ignore_existing)
         if not changes:
             continue
-        src = insert_changes(module, changes)
+
         if diff is None:
-            typer.echo("\n".join(src))
-        elif diff:
-            before = inspect.getsource(module).splitlines()
-            _diff = difflib.unified_diff(before, src, lineterm="")
-            typer.echo("\n".join(_diff))
-            continue
+            print_changes(changes, "generated")
         else:
-            with file_path.open(mode="w", encoding="UTF-8") as f:
-                f.write("\n".join(src))
+            apply_changes(
+                module,
+                changes,
+                file_path,
+                diff=diff,
+                change_func=insert_changes,
+            )
 
 
 @app.command()
@@ -337,21 +425,21 @@ def remove(
     diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
 ) -> None:
     """Remove the __repr__ method from all classes in the source code."""
-    for file_path in files:
-        module, changes = remove_repr(file_path)
+    for module, file_path in get_modules(files):
+        changes = remove_repr(module)
         if not changes:
             continue
-        src = remove_changes(module, changes)
+
         if diff is None:
-            typer.echo("\n".join(src))
-        elif diff:
-            before = inspect.getsource(module).splitlines()
-            _diff = difflib.unified_diff(before, src, lineterm="")
-            typer.echo("\n".join(_diff))
-            continue
+            print_changes(changes, "removed")
         else:
-            with file_path.open(mode="w", encoding="UTF-8") as f:
-                f.write("\n".join(src))
+            apply_changes(
+                module,
+                changes,
+                file_path,
+                diff=diff,
+                change_func=remove_changes,
+            )
 
 
 if __name__ == "__main__":
