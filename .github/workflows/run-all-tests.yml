@@ -77,8 +77,9 @@ jobs:
 
   publish:
     if: >-
-      "github.event_name == 'push' && github.repository == 'cleder/crepr'
-      && github.ref == 'refs/heads/main'"
+      github.event_name == 'push' &&
+      github.repository == 'cleder/crepr' &&
+      github.ref == 'refs/heads/main'
     needs: build-package
     name: Build and publish to PyPI and TestPyPI
     runs-on: ubuntu-latest
@@ -97,8 +98,9 @@ jobs:
 
   test-publish:
     if: >-
-      "github.event_name == 'push' && github.repository == 'cleder/crepr'
-      && startsWith(github.ref, 'refs/tags')"
+      github.event_name == 'push' &&
+      github.repository == 'cleder/crepr' &&
+      startsWith(github.ref, 'refs/tags')
     needs: build-package
     name: Test install on TestPyPI
     runs-on: ubuntu-latest
