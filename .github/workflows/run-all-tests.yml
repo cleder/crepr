@@ -73,7 +73,7 @@ jobs:
       - name: Check with pyroma
         run: |
           python -m pip install pyroma
-          python -m pip install .
+          python -m pip install -e .
           pyroma .
 
   publish:
