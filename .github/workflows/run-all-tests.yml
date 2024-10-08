@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12', '3.13-dev']
+        python-version: ['3.12', '3.13-dev', 3.14-dev]
 
     steps:
       - uses: actions/checkout@v4
@@ -63,39 +63,62 @@ jobs:
           radon mi --min B crepr
           lizard -l python -w crepr
 
-  publish:
-    if: "github.event_name == 'push' && github.repository == 'cleder/crepr'"
-    needs: [cpython, static-tests]
-    name: Build and publish to PyPI and TestPyPI
+  build-package:
+    name: Build & inspect our package.
     runs-on: ubuntu-latest
+    needs: [cpython, static-tests]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - uses: hynek/build-and-inspect-python-package@v2
+      - uses: actions/setup-python@v5
         with:
-          python-version: 3.12
-      - name: Install pypa/build
-        run: >-
-          python -m
-          pip install
-          build
-          --user
-      - name: Build a binary wheel and a source tarball
-        run: >-
-          python -m
-          build
-          --sdist
-          --wheel
-          --outdir dist/
-      - name: Publish distribution 📦 to Test PyPI for tags
-        if: startsWith(github.ref, 'refs/tags')
-        uses: pypa/gh-action-pypi-publish@master
+          python-version: '3.12'
+      - name: Check with pyroma
+        run: |
+          python -m pip install pyroma
+          pyroma .
+
+  publish:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'cleder/crepr' &&
+      github.ref == 'refs/heads/main'
+    needs: build-package
+    name: Build and publish to PyPI and TestPyPI
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - name: Download packages built by build-package
+        uses: actions/download-artifact@v4
         with:
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          name: Packages
+          path: dist
+
       - name: Publish distribution 📦 to PyPI for push to main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: pypa/gh-action-pypi-publish@master
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  test-publish:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'cleder/crepr' &&
+      startsWith(github.ref, 'refs/tags')
+    needs: build-package
+    name: Test install on TestPyPI
+    runs-on: ubuntu-latest
+    environment: release-test
+    permissions:
+      id-token: write
+    steps:
+      - name: Download packages built by build-package
+        uses: actions/download-artifact@v4
         with:
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          name: Packages
+          path: dist
+
+      - name: Upload package to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
 ...
