@@ -1,4 +1,4 @@
-# usr/bin/env python3
+#!/usr/bin/env python3
 """Check if the version in the about.py file matches the given version.
 
 Usage: check_version_tag.py <filename> <tag_version>
@@ -65,6 +65,6 @@ if __name__ == "__main__":
         file_name = sys.argv[1]
         tag_name = sys.argv[2]
     except IndexError:
-        sys.stdout.write("Usage: check_version_tag.py <filename> <tag_version>")
+        sys.stdout.write("Usage: check_version_tag.py <filename> <version>")
         sys.exit(1)
     main(file_name, tag_name)
