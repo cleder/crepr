@@ -78,26 +78,15 @@ jobs:
           python -m pip install pyroma
           pyroma .
 
-  publish:
-    if: >-
-      github.event_name == 'push' &&
-      github.repository == 'cleder/crepr' &&
-      github.ref == 'refs/heads/main'
-    needs: build-package
-    name: Build and publish to PyPI and TestPyPI
+  test-tag:
+    name: Test tag name
     runs-on: ubuntu-latest
-    environment: release
-    permissions:
-      id-token: write
     steps:
-      - name: Download packages built by build-package
-        uses: actions/download-artifact@v4
-        with:
-          name: Packages
-          path: dist
+      - uses: actions/checkout@v4
+      - name: GitHub Tag Name example
+        run: |
+          echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
 
-      - name: Publish distribution 📦 to PyPI for push to main
-        uses: pypa/gh-action-pypi-publish@release/v1
 
   test-publish:
     if: >-
@@ -121,4 +110,26 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           repository-url: https://test.pypi.org/legacy/
+
+  publish:
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'cleder/crepr' &&
+      github.ref == 'refs/heads/main'
+    needs: build-package
+    name: Build and publish to PyPI and TestPyPI
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - name: Download packages built by build-package
+        uses: actions/download-artifact@v4
+        with:
+          name: Packages
+          path: dist
+
+      - name: Publish distribution 📦 to PyPI for push to main
+        uses: pypa/gh-action-pypi-publish@release/v1
+
 ...
