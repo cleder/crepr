@@ -77,15 +77,14 @@ jobs:
         run: |
           python -m pip install pyroma
           pyroma .
-
-  test-tag:
-    name: Test tag name
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: GitHub Tag Name example
+      - name: Check tag name
+        if: >-
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags')
         run: |
           echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
+          python -m pip install semantic_version_check
+          check-semantic-version $GITHUB_REF_NAME
 
 
   test-publish:
