@@ -83,7 +83,7 @@ jobs:
           startsWith(github.ref, 'refs/tags')
         run: |
           echo "Tag name from GITHUB_REF_NAME: $GITHUB_REF_NAME"
-          python -m pip install semantic_version_check
+          python -m pip install semantic_version_check click
           check-semantic-version $GITHUB_REF_NAME
 
 
