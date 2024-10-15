@@ -9,12 +9,14 @@ It uses the definition found in the  ``__init__`` method of the class.
 import difflib
 import importlib
 import importlib.machinery
+import importlib.util
 import inspect
 import pathlib
 import uuid
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
+from importlib.abc import Loader
 from types import MappingProxyType
 from types import ModuleType
 from typing import Annotated
@@ -223,35 +225,28 @@ def create_repr_lines(
 
 
 def get_module(file_path: pathlib.Path) -> ModuleType:
-    """Get all classes of a source file.
+    """Get all classes of a source file."""
+    spec = load_module_spec(file_path)
+    return create_module(spec)
 
-    Given a file path, loads the module and yields all classes defined in it
-    along with the module object.
 
-    Args:
-    ----
-        file_path (str): The path to the file containing the module.
+def load_module_spec(file_path: pathlib.Path) -> importlib.machinery.ModuleSpec:
+    """Load the module specification from the given file path."""
+    spec = importlib.util.spec_from_file_location(uuid.uuid4().hex, str(file_path))
+    if spec is None:
+        error_message = "File doesn't have specs"
+        raise CreprError(error_message, exit_code=1)
+    return spec
 
-    Yields:
-    ------
-        tuple[type, ModuleType]: A tuple containing the class and the module objects.
 
-    """
-    try:
-        loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
-        module = loader.load_module()
-    except FileNotFoundError as e:
-        message = f"Error: File '{file_path}' not found."
-        raise CreprError(message, exit_code=1) from e
-    except ImportError as e:
-        message = f"Error: Could not import '{file_path}'."
-        raise CreprError(message, exit_code=1) from e
-    except SyntaxError as e:
-        message = f"Error: Could not parse '{file_path}'."
-        raise CreprError(message, exit_code=1) from e
-    except IsADirectoryError as e:
-        message = f"Error: '{file_path}' is a directory."
-        raise CreprError(message, exit_code=1) from e
+def create_module(spec: importlib.machinery.ModuleSpec) -> ModuleType:
+    """Create and execute the module from the given specification."""
+    if spec.loader is None or not isinstance(spec.loader, Loader):
+        error_message = "File doesn't have a valid loader"
+        raise CreprError(error_message, exit_code=1)
+
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
     return module
 
 
