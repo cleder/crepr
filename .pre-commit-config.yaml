@@ -87,4 +87,8 @@ repos:
     rev: "4.2"
     hooks:
       - id: pyroma
+  - repo: https://github.com/crate-ci/typos
+    rev: v1.26.8
+    hooks:
+      - id: typos
 ...
