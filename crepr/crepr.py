@@ -7,14 +7,14 @@ It uses the definition found in the  ``__init__`` method of the class.
 """
 
 import difflib
-import importlib
-import importlib.machinery
 import inspect
 import pathlib
 import uuid
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
+from importlib.util import module_from_spec
+from importlib.util import spec_from_file_location
 from types import MappingProxyType
 from types import ModuleType
 from typing import Annotated
@@ -234,12 +234,17 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
 
     Yields:
     ------
-        tuple[type, ModuleType]: A tuple containing the class and the module objects.
+        ModuleType: The imported module.
 
     """
+    spec = spec_from_file_location(uuid.uuid4().hex, file_path)
+    if spec is None:
+        message = f"Error: File '{file_path}' not found."
+        raise CreprError(message, exit_code=1)
+    assert spec.loader is not None  # noqa: S101
+    module = module_from_spec(spec)
     try:
-        loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
-        module = loader.load_module()
+        spec.loader.exec_module(module)
     except FileNotFoundError as e:
         message = f"Error: File '{file_path}' not found."
         raise CreprError(message, exit_code=1) from e
@@ -306,8 +311,6 @@ def get_all_init_args(
 
     """
     for _, obj in inspect.getmembers(module, inspect.isclass):
-        if not is_class_in_module(obj, module):
-            continue
         init_args, lineno, source = get_init_args(obj)
         if not init_args or lineno == -1 or not has_only_kwargs(init_args):
             continue
