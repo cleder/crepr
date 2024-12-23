@@ -40,7 +40,7 @@ repos:
     hooks:
       - id: black
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.8.3'
+    rev: 'v0.8.4'
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
@@ -64,7 +64,7 @@ repos:
           - flake8-super
           - flake8-use-fstring
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.13.0
+    rev: v1.14.0
     hooks:
       - id: mypy
         args: [--strict]
@@ -88,7 +88,7 @@ repos:
     hooks:
       - id: pyroma
   - repo: https://github.com/crate-ci/typos
-    rev: v1.28.3
+    rev: v1.28.4
     hooks:
       - id: typos
 ...
