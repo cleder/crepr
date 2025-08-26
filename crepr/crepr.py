@@ -177,7 +177,8 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
               False if it is imported.
 
     """
-    return inspect.getmodule(cls) == module
+    # Compare module names to avoid issues with inspect.getmodule returning None
+    return cls.__module__ == module.__name__
 
 
 def repr_exists(cls: type) -> bool:
@@ -311,6 +312,8 @@ def get_all_init_args(
 
     """
     for _, obj in inspect.getmembers(module, inspect.isclass):
+        if not is_class_in_module(obj, module):
+            continue
         init_args, lineno, source = get_init_args(obj)
         if not init_args or lineno == -1 or not has_only_kwargs(init_args):
             continue
