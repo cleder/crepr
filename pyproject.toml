@@ -4,6 +4,43 @@ requires = [
     "setuptools>=61.2",
 ]
 
+[dependency-groups]
+complexity = [
+    "lizard",
+    "radon",
+]
+dev = [
+    "pre-commit>=4.2.0",
+    { include-group = "complexity" },
+    { include-group = "linting" },
+    { include-group = "tests" },
+    { include-group = "typing" },
+]
+linting = [
+    "black",
+    "flake8",
+    "flake8-cognitive-complexity",
+    "flake8-comments",
+    "flake8-complex-f-strings",
+    "flake8-continuation",
+    "flake8-docstrings",
+    "flake8-encodings",
+    "flake8-expression-complexity",
+    "flake8-function-order",
+    "flake8-pep3101",
+    "flake8-super",
+    "flake8-use-fstring",
+    "ruff",
+    "yamllint",
+]
+tests = [
+    "pytest",
+    "pytest-cov",
+]
+typing = [
+    "mypy",
+]
+
 [project]
 authors = [
     { email = "christian.ledermann@gmail.com", name = "Christian Ledermann" },
@@ -23,7 +60,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
-    "typer",
+    "typer-slim>=0.16.1",
 ]
 description = "Create a __repr__ for your python classes from the definition found in __init__"
 dynamic = [

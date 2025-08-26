@@ -377,7 +377,7 @@ def print_diff(before: list[str], after: list[str]) -> None:
             color = "red"
         if line.startswith("+"):
             color = "green"
-        typer.secho(line, fg=color, err=True)
+        typer.secho(line, fg=color)
 
 
 def apply_changes(
