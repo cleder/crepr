@@ -401,7 +401,7 @@ def apply_changes(
 def add(
     files: Annotated[list[pathlib.Path], file_arg],
     kwarg_splat: Annotated[str, splat_option] = "{}",
-    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
+    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP045
     ignore_existing: Annotated[bool, ignore_existing_option] = False,  # noqa: FBT002
 ) -> None:
     """Add __repr__ to all classes in the source code."""
@@ -425,7 +425,7 @@ def add(
 @app.command()
 def remove(
     files: Annotated[list[pathlib.Path], file_arg],
-    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP007
+    diff: Annotated[Optional[bool], diff_inline_option] = None,  # noqa: UP045
 ) -> None:
     """Remove the __repr__ method from all classes in the source code."""
     for module, file_path in get_modules(files):
