@@ -82,7 +82,7 @@ def test_get_init_splat_kwargs() -> None:
     """Test get_init_args with a **kwargs splat."""
     path = test_dir / "remove" / "splat_kwargs_test.py"
     module = crepr.get_module(path)
-    cls, init_args, lineno, src = next(crepr.get_all_init_args(module))
+    cls, init_args, _lineno, _src = next(crepr.get_all_init_args(module))
     assert cls.__name__ == "SplatKwargs"
     assert init_args is not None
     assert len(init_args) == 3
