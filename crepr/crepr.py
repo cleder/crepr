@@ -242,7 +242,9 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
     if spec is None:
         message = f"Error: File '{file_path}' not found."
         raise CreprError(message, exit_code=1)
-    assert spec.loader is not None  # noqa: S101
+    if spec.loader is None:
+        message = f"Error: Loader for file '{file_path}' not found."
+        raise CreprError(message, exit_code=1)
     module = module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
