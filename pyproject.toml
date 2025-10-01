@@ -159,6 +159,10 @@ disallow_untyped_defs = true
 enable_error_code = [
     "ignore-without-code",
 ]
+exclude = [
+    "^tests/classes/.",
+    "^tests/remove/.",
+]
 ignore_errors = false
 ignore_missing_imports = false
 implicit_reexport = false
@@ -177,6 +181,10 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [tool.ruff]
+extend-exclude = [
+    "tests/classes",
+    "tests/remove",
+]
 fix = true
 target-version = "py312"
 
