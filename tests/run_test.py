@@ -47,7 +47,14 @@ def test_get_module_import_error() -> None:
 
 def test_get_module_syntax_error() -> None:
     """Exit gracefully if module not found."""
-    path = test_dir / "classes" / "c_test.c"
+    path = test_dir / "classes" / "c.py"
+    with pytest.raises(crepr.CreprError):
+        crepr.get_module(path)
+
+
+def test_get_module_is_a_directory_error() -> None:
+    """Exit gracefully if module not found."""
+    path = test_dir / "classes" / "emptydir"
     with pytest.raises(crepr.CreprError):
         crepr.get_module(path)
 

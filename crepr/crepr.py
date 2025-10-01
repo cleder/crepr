@@ -246,17 +246,11 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
     module = module_from_spec(spec)
     try:
         spec.loader.exec_module(module)
-    except FileNotFoundError as e:
-        message = f"Error: File '{file_path}' not found."
-        raise CreprError(message, exit_code=1) from e
     except ImportError as e:
         message = f"Error: Could not import '{file_path}'."
         raise CreprError(message, exit_code=1) from e
     except SyntaxError as e:
         message = f"Error: Could not parse '{file_path}'."
-        raise CreprError(message, exit_code=1) from e
-    except IsADirectoryError as e:
-        message = f"Error: '{file_path}' is a directory."
         raise CreprError(message, exit_code=1) from e
     return module
 
