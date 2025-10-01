@@ -36,7 +36,7 @@ pip install crepr
 To add a `__repr__` method to all classes in a file:
 
 ```bash
-crepr add <file_name> [--kwarg-splat "..."] [--diff/--inline]
+crepr add <file_name> [--kwarg-splat "{}"] [--diff/--inline]
 ```
 
 To remove the `__repr__` method from all classes in a file:
@@ -51,6 +51,7 @@ crepr remove <file_name> [--diff/--inline]
 * `--kwarg-splat`: The string to use for the **kwargs splat (default: "{}").
 * `--diff`: Display the diff of the changes.
 * `--inline`: Apply the changes directly to the file.
+* `--ignore-existing`: Add `__repr__` regardless if one exists
 
 ## Example
 
