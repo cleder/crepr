@@ -2,27 +2,21 @@
 
 Create a ``__repr__`` for your python classes.
 
-
-`crepr` is a Python script that takes a file name as a command-line argument, imports the specified module, and then adds or removes a `__repr__` method for each class defined in the module. It uses the definition found in the `__init__` method of the class to create a useful representation of the object.
+`crepr` is a Python script that takes a file name as a command-line argument, imports the specified module, and then adds or removes a `__repr__` method for each class defined in the module.
+It uses the definition found in the `__init__` method of the class to create a useful representation of the object.
 It is pronounced /kɹeɪpr/, like 🇳🇿 crêpe.
 
-Have a look at the blog-post [Love Your Representation
-](https://dev.to/ldrscke/love-your-representation-27mm) for the rationale of this package.
-
+Have a look at the blog-post [Love Your Representation](https://dev.to/ldrscke/love-your-representation-27mm) for the rationale of this package.
 
 [![Tests](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml/badge.svg?branch=main)](https://github.com/cleder/crepr/actions/workflows/run-all-tests.yml)
 [![codecov](https://codecov.io/gh/cleder/crepr/graph/badge.svg?token=EGCcrWkpay)](https://codecov.io/gh/cleder/crepr)
-[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)
-](https://github.com/pre-commit/pre-commit)
-[![MyPy](https://img.shields.io/badge/type_checker-mypy-blue)
-](http://mypy-lang.org/)
-[![Black](https://img.shields.io/badge/code_style-black-000000)
-](https://github.com/psf/black)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit)](https://github.com/pre-commit/pre-commit)
+[![MyPy](https://img.shields.io/badge/type_checker-mypy-blue)](http://mypy-lang.org/)
+[![Black](https://img.shields.io/badge/code_style-black-000000)](https://github.com/psf/black)
 [![MIT License](https://img.shields.io/pypi/l/crepr)](https://opensource.org/license/mit/)
 [![Python Version](https://img.shields.io/pypi/pyversions/crepr)](https://www.python.org/)
 [![PyPI - Version](https://img.shields.io/pypi/v/crepr)](https://pypi.org/project/crepr/)
 [![Status](https://img.shields.io/pypi/status/crepr)](https://pypi.org/project/crepr/)
-
 
 ## Features
 

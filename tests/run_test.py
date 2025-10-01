@@ -20,7 +20,7 @@ def test_get_init_source_no_init() -> None:
     """Test the edge-case when there is no __init__."""
     src, lineno = crepr.get_init_source(int)
     assert lineno == -1
-    assert src == ""
+    assert not src
 
 
 def test_get_module() -> None:
@@ -47,7 +47,14 @@ def test_get_module_import_error() -> None:
 
 def test_get_module_syntax_error() -> None:
     """Exit gracefully if module not found."""
-    path = test_dir / "classes" / "c_test.c"
+    path = test_dir / "classes" / "c.py"
+    with pytest.raises(crepr.CreprError):
+        crepr.get_module(path)
+
+
+def test_get_module_is_a_directory_error() -> None:
+    """Exit gracefully if module not found."""
+    path = test_dir / "classes" / "emptydir"
     with pytest.raises(crepr.CreprError):
         crepr.get_module(path)
 
@@ -82,7 +89,7 @@ def test_get_init_splat_kwargs() -> None:
     """Test get_init_args with a **kwargs splat."""
     path = test_dir / "remove" / "splat_kwargs_test.py"
     module = crepr.get_module(path)
-    cls, init_args, lineno, src = next(crepr.get_all_init_args(module))
+    cls, init_args, _lineno, _src = next(crepr.get_all_init_args(module))
     assert cls.__name__ == "SplatKwargs"
     assert init_args is not None
     assert len(init_args) == 3
@@ -261,7 +268,9 @@ def test_write() -> None:
     """Write the changes."""
     path = test_dir / "classes" / "kw_only_test.py"
 
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, encoding="UTF-8", suffix=".py"
+    ) as temp_file:
         with path.open(mode="rt", encoding="UTF-8") as f:
             temp_file.write(f.read())
         temp_file_path = pathlib.Path(temp_file.name)
@@ -281,13 +290,14 @@ def test_remove() -> None:
     """Remove the __repr__."""
     path = test_dir / "remove" / "splat_kwargs_test.py"
 
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, encoding="UTF-8", suffix=".py"
+    ) as temp_file:
         with pathlib.Path.open(path, mode="rt", encoding="UTF-8") as f:
             temp_file.write(f.read())
         temp_file_path = pathlib.Path(temp_file.name)
 
-    tmp_file_name = str(temp_file_path.absolute())
-    result = runner.invoke(crepr.app, ["remove", "--inline", tmp_file_name])
+    result = runner.invoke(crepr.app, ["remove", "--inline", temp_file.name])
     assert result.exit_code == 0
     with pathlib.Path.open(temp_file_path, mode="rt", encoding="UTF-8") as f:
         content = f.read()
@@ -334,7 +344,9 @@ def test_show_remove_no_repr() -> None:
 def test_add_ignore_existing_false() -> None:
     """Test add command when ignore_existing is False and __repr__ exists."""
     path = test_dir / "classes" / "existing_repr_test.py"
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, encoding="UTF-8", suffix=".py"
+    ) as temp_file:
         with path.open(mode="rt", encoding="UTF-8") as f:
             temp_file.write(f.read())
         temp_file_path = pathlib.Path(temp_file.name)
@@ -357,7 +369,9 @@ def test_add_ignore_existing_false() -> None:
 def test_add_ignore_existing_true() -> None:
     """Test add command when ignore_existing is True and __repr__ exists."""
     path = test_dir / "classes" / "existing_repr_test.py"
-    with tempfile.NamedTemporaryFile(mode="w", delete=False) as temp_file:
+    with tempfile.NamedTemporaryFile(
+        mode="w", delete=False, encoding="UTF-8", suffix=".py"
+    ) as temp_file:
         with path.open(mode="rt", encoding="UTF-8") as f:
             temp_file.write(f.read())
         temp_file_path = pathlib.Path(temp_file.name)

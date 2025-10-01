@@ -4,43 +4,6 @@ requires = [
     "setuptools>=61.2",
 ]
 
-[dependency-groups]
-complexity = [
-    "lizard",
-    "radon",
-]
-dev = [
-    "pre-commit>=4.2.0",
-    { include-group = "complexity" },
-    { include-group = "linting" },
-    { include-group = "tests" },
-    { include-group = "typing" },
-]
-linting = [
-    "black",
-    "flake8",
-    "flake8-cognitive-complexity",
-    "flake8-comments",
-    "flake8-complex-f-strings",
-    "flake8-continuation",
-    "flake8-docstrings",
-    "flake8-encodings",
-    "flake8-expression-complexity",
-    "flake8-function-order",
-    "flake8-pep3101",
-    "flake8-super",
-    "flake8-use-fstring",
-    "ruff",
-    "yamllint",
-]
-tests = [
-    "pytest",
-    "pytest-cov",
-]
-typing = [
-    "mypy",
-]
-
 [project]
 authors = [
     { email = "christian.ledermann@gmail.com", name = "Christian Ledermann" },
@@ -80,6 +43,7 @@ text = "MIT"
 
 [project.optional-dependencies]
 complexity = [
+    "complexipy",
     "lizard",
     "radon",
 ]
@@ -91,19 +55,6 @@ dev = [
     "pre-commit",
 ]
 linting = [
-    "black",
-    "flake8",
-    "flake8-cognitive-complexity",
-    "flake8-comments",
-    "flake8-complex-f-strings",
-    "flake8-continuation",
-    "flake8-docstrings",
-    "flake8-encodings",
-    "flake8-expression-complexity",
-    "flake8-function-order",
-    "flake8-pep3101",
-    "flake8-super",
-    "flake8-use-fstring",
     "ruff",
     "yamllint",
 ]
@@ -159,6 +110,10 @@ disallow_untyped_defs = true
 enable_error_code = [
     "ignore-without-code",
 ]
+exclude = [
+    "^tests/classes/.",
+    "^tests/remove/.",
+]
 ignore_errors = false
 ignore_missing_imports = false
 implicit_reexport = false
@@ -177,73 +132,21 @@ warn_unused_configs = true
 warn_unused_ignores = true
 
 [tool.ruff]
+extend-exclude = [
+    "tests/classes",
+    "tests/remove",
+]
 fix = true
 target-version = "py312"
 
 [tool.ruff.lint]
 ignore = [
+    "COM812",
     "D203",
     "D213",
 ]
 select = [
-    "A",
-    "AIR",
-    "ANN",
-    "ARG",
-    "ASYNC",
-    "B",
-    "BLE",
-    "C4",
-    "C90",
-    "COM",
-    "CPY",
-    "D",
-    "DJ",
-    "DTZ",
-    "E",
-    "EM",
-    "ERA",
-    "EXE",
-    "F",
-    "FA",
-    "FBT",
-    "FIX",
-    "FLY",
-    "FURB",
-    "G",
-    "I",
-    "ICN",
-    "INP",
-    "INT",
-    "ISC",
-    "LOG",
-    "N",
-    "NPY",
-    "PD",
-    "PERF",
-    "PGH",
-    "PIE",
-    "PL",
-    "PT",
-    "PTH",
-    "PYI",
-    "Q",
-    "RET",
-    "RSE",
-    "RUF",
-    "S",
-    "SIM",
-    "SLF",
-    "SLOT",
-    "T10",
-    "T20",
-    "TCH",
-    "TD",
-    "TID",
-    "TRY",
-    "UP",
-    "W",
-    "YTT",
+    "ALL",
 ]
 
 [tool.ruff.lint.isort]

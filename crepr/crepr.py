@@ -7,14 +7,14 @@ It uses the definition found in the  ``__init__`` method of the class.
 """
 
 import difflib
-import importlib
-import importlib.machinery
 import inspect
 import pathlib
 import uuid
 from collections.abc import Callable
 from collections.abc import Iterable
 from collections.abc import Iterator
+from importlib.util import module_from_spec
+from importlib.util import spec_from_file_location
 from types import MappingProxyType
 from types import ModuleType
 from typing import Annotated
@@ -177,7 +177,8 @@ def is_class_in_module(cls: type, module: ModuleType) -> bool:
               False if it is imported.
 
     """
-    return inspect.getmodule(cls) == module
+    # Compare module names to avoid issues with inspect.getmodule returning None
+    return cls.__module__ == module.__name__
 
 
 def repr_exists(cls: type) -> bool:
@@ -234,23 +235,22 @@ def get_module(file_path: pathlib.Path) -> ModuleType:
 
     Yields:
     ------
-        tuple[type, ModuleType]: A tuple containing the class and the module objects.
+        ModuleType: The imported module.
 
     """
-    try:
-        loader = importlib.machinery.SourceFileLoader(uuid.uuid4().hex, str(file_path))
-        module = loader.load_module()
-    except FileNotFoundError as e:
+    spec = spec_from_file_location(uuid.uuid4().hex, file_path)
+    if spec is None:
         message = f"Error: File '{file_path}' not found."
-        raise CreprError(message, exit_code=1) from e
+        raise CreprError(message, exit_code=1)
+    module = module_from_spec(spec)
+    try:
+        assert spec.loader is not None  # noqa: S101
+        spec.loader.exec_module(module)
     except ImportError as e:
         message = f"Error: Could not import '{file_path}'."
         raise CreprError(message, exit_code=1) from e
     except SyntaxError as e:
         message = f"Error: Could not parse '{file_path}'."
-        raise CreprError(message, exit_code=1) from e
-    except IsADirectoryError as e:
-        message = f"Error: '{file_path}' is a directory."
         raise CreprError(message, exit_code=1) from e
     return module
 
