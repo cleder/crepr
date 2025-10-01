@@ -68,4 +68,9 @@ repos:
     rev: v0.0.140
     hooks:
       - id: rumdl
+  - repo: https://github.com/rohaquinlop/complexipy-pre-commit
+    rev: v3.3.0  # Use the latest version
+    hooks:
+      - id: complexipy
+        exclude: ^tests/classes/
 ...

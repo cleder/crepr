@@ -53,15 +53,15 @@ jobs:
           mypy crepr tests
       - name: Linting
         run: |
-          flake8 crepr tests --max-line-length=88
-          black --check crepr tests
           ruff check --no-fix crepr tests
+          ruff format --check crepr tests
           yamllint .github/workflows/
       - name: Check complexity
         run: |
           radon cc --min B crepr
           radon mi --min B crepr
           lizard -l python -w crepr
+          complexipy crepr
 
   build-package:
     name: Build & inspect our package.
