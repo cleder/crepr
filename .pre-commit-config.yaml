@@ -25,7 +25,7 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.14.4'
+    rev: 'v0.14.5'
     hooks:
       - id: ruff-check
         exclude: ^tests/classes/
@@ -47,7 +47,7 @@ repos:
     hooks:
       - id: pyprojectsort
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.34.1"
+    rev: "0.35.0"
     hooks:
       - id: check-github-workflows
       - id: check-github-actions
@@ -65,7 +65,7 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: v0.0.174
+    rev: v0.0.177
     hooks:
       - id: rumdl
   - repo: https://github.com/rohaquinlop/complexipy-pre-commit
