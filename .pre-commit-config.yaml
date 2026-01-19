@@ -25,7 +25,7 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.14.11'
+    rev: 'v0.14.13'
     hooks:
       - id: ruff-check
         exclude: ^tests/classes/
@@ -61,11 +61,11 @@ repos:
     hooks:
       - id: typos
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.37.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
   - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: v0.0.215
+    rev: v0.0.221
     hooks:
       - id: rumdl
   - repo: https://github.com/rohaquinlop/complexipy-pre-commit
