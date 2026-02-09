@@ -25,7 +25,7 @@ repos:
       - id: requirements-txt-fixer
       - id: trailing-whitespace
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.14.14'
+    rev: 'v0.15.0'
     hooks:
       - id: ruff-check
         exclude: ^tests/classes/
@@ -39,7 +39,7 @@ repos:
         additional_dependencies: ["typer", "pytest"]
         exclude: ^tests/classes/
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.24.1
+    rev: v0.25
     hooks:
       - id: validate-pyproject
   - repo: https://github.com/kieran-ryan/pyprojectsort
@@ -65,11 +65,11 @@ repos:
     hooks:
       - id: yamllint
   - repo: https://github.com/rvben/rumdl-pre-commit
-    rev: v0.1.10
+    rev: v0.1.15
     hooks:
       - id: rumdl
   - repo: https://github.com/rohaquinlop/complexipy-pre-commit
-    rev: v4.2.0  # Use the latest version
+    rev: v5.1.0  # Use the latest version
     hooks:
       - id: complexipy
         exclude: ^tests/classes/
