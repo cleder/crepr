@@ -15,6 +15,7 @@ Use `crepr remove` with the same three execution styles as `add`: preview, diff,
 
 <Steps>
 <Step>
+
 ### Preview what will be removed
 
 ```bash
@@ -25,6 +26,7 @@ This prints the exact `__repr__` block targeted for each eligible class.
 
 </Step>
 <Step>
+
 ### Review the deletion as a diff
 
 ```bash
@@ -35,6 +37,7 @@ The removed lines appear with `-` prefixes in the unified diff.
 
 </Step>
 <Step>
+
 ### Apply the deletion
 
 ```bash

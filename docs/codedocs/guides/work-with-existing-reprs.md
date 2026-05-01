@@ -15,6 +15,7 @@ Use the default behavior to skip classes that already have a `__repr__`, and set
 
 <Steps>
 <Step>
+
 ### Start with the safe default
 
 ```bash
@@ -25,6 +26,7 @@ By default, classes with an existing `__repr__` are skipped. The tests in `tests
 
 </Step>
 <Step>
+
 ### Customize how `**kwargs` appears
 
 ```bash
@@ -35,6 +37,7 @@ This changes the generated placeholder fragment from the default `**{},` style t
 
 </Step>
 <Step>
+
 ### Use `--ignore-existing` only deliberately
 
 ```bash

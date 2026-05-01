@@ -11,6 +11,7 @@ Use preview mode when you are introducing `__repr__` coverage to an existing mod
 
 <Steps>
 <Step>
+
 ### Create or choose a supported module
 
 Use a class with an explicit `__init__` and named parameters:
@@ -27,6 +28,7 @@ class Account:
 
 </Step>
 <Step>
+
 ### Run `crepr add` without flags
 
 ```bash
@@ -37,6 +39,7 @@ Without `--diff` or `--inline`, the command stays in preview mode and prints onl
 
 </Step>
 <Step>
+
 ### Read the generated method carefully
 
 Expected output:

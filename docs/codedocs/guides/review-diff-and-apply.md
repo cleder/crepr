@@ -15,6 +15,7 @@ Use `--diff` to generate a unified diff, review the patch, and then rerun the sa
 
 <Steps>
 <Step>
+
 ### Generate a diff
 
 ```bash
@@ -25,6 +26,7 @@ The diff is produced by `print_diff`, which wraps `difflib.unified_diff`.
 
 </Step>
 <Step>
+
 ### Inspect the patch
 
 Look for the new `__repr__` block inserted after the constructor:
@@ -46,6 +48,7 @@ Look for the new `__repr__` block inserted after the constructor:
 
 </Step>
 <Step>
+
 ### Apply the same change inline
 
 ```bash
