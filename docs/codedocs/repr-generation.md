@@ -60,10 +60,12 @@ class Product:
 ```python
 def __repr__(self) -> str:
     """Create a string (c)representation for Product."""
-    return (f'{self.__class__.__module__}.{self.__class__.__name__}('
-        f'sku={self.sku!r}, '
-        f'price={self.price!r}, '
-    ')')
+    return (
+        f"{self.__class__.__module__}.{self.__class__.__name__}("
+        f"sku={self.sku!r}, "
+        f"price={self.price!r}, "
+        ")"
+    )
 ```
 
 ## Advanced Example
