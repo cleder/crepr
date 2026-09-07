@@ -129,7 +129,9 @@ Signature:
 ```python
 def get_all_init_args(
     module: ModuleType,
-) -> Iterator[tuple[type, MappingProxyType[str, inspect.Parameter], int, list[str]]]: ...
+) -> Iterator[
+    tuple[type, MappingProxyType[str, inspect.Parameter], int, list[str]]
+]: ...
 ```
 
 Iterates through all classes in the module, applies the class-selection rules, and yields tuples ready for repr generation or removal.
