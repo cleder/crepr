@@ -23,10 +23,12 @@ crepr add tests/classes/kw_only_test.py
 ```python
 def __repr__(self) -> str:
     """Create a string (c)representation for KwOnly."""
-    return (f'{self.__class__.__module__}.{self.__class__.__name__}('
-        f'name={self.name!r}, '
-        f'age={self.age!r}, '
-    ')')
+    return (
+        f"{self.__class__.__module__}.{self.__class__.__name__}("
+        f"name={self.name!r}, "
+        f"age={self.age!r}, "
+        ")"
+    )
 ```
 
 ## Installation
